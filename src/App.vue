@@ -1,6 +1,7 @@
 <script setup>
 import ControlBar from './components/ControlBar.vue'
 import RankBarChart from './components/RankBarChart.vue'
+import ScatterPlot from './components/ScatterPlot.vue'
 import { useCrimeData } from './composables/useCrimeData.js'
 
 const { meta } = useCrimeData()
@@ -11,7 +12,10 @@ const { meta } = useCrimeData()
     <h1>同一份資料，排序差多少？</h1>
     <p class="subtitle">台灣 22 縣市犯罪率與破獲率｜資料：{{ meta.source }}</p>
     <ControlBar />
-    <RankBarChart />
+    <div class="charts">
+      <RankBarChart />
+      <ScatterPlot />
+    </div>
   </main>
 </template>
 
@@ -22,6 +26,12 @@ const { meta } = useCrimeData()
 h1 {
   margin: 0 0 4px;
   font-size: 30px;
+}
+.charts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-start;
 }
 .subtitle {
   margin: 0;
