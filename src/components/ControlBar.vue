@@ -1,7 +1,7 @@
 <script setup>
 // 固定在頂端的控制列：案類、篩選（套用到 A、B、C）＋目前狀態＋懸停或鎖定縣市的摘要
 // 「排序依據」只影響圖 A，放在圖 A 的標題列（第 12 步）
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useCrimeData } from '../composables/useCrimeData.js'
 import { useViewState } from '../composables/useViewState.js'
 import { countySummary } from '../utils/headlines.js'
@@ -39,10 +39,22 @@ const status = computed(() => `目前：${TYPE[state.crimeType]}，${FILTER[stat
 const byId = new Map(counties.map((c) => [c.id, c]))
 const focusId = computed(() => state.pinned ?? state.hovered)
 const summary = computed(() => (focusId.value ? countySummary(byId.get(focusId.value), meta, state.crimeType) : null))
+
+// 往下捲、控制列貼在頂端時才顯示分隔線（停在頁首時不顯示）
+const barRef = ref(null)
+const stuck = ref(false)
+function onScroll() {
+  stuck.value = !!barRef.value && window.scrollY > 0 && barRef.value.getBoundingClientRect().top <= 0
+}
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+})
+onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 </script>
 
 <template>
-  <div class="control-bar">
+  <div ref="barRef" class="control-bar" :class="{ stuck }">
     <div class="inner">
       <div class="groups">
         <div v-for="g in groups" :key="g.label" class="group" role="group" :aria-label="g.label">
@@ -81,8 +93,13 @@ const summary = computed(() => (focusId.value ? countySummary(byId.get(focusId.v
   position: sticky;
   top: 0;
   z-index: 5;
-  background: var(--paper); /* 與頁面同底色，不加分隔線，靠留白與內容區隔 */
+  background: var(--paper);
+  transition: box-shadow 0.15s;
   margin-bottom: 24px;
+}
+/* 分隔線用 box-shadow，不用 border：出現時不改變控制列高度，畫面不會跳 */
+.control-bar.stuck {
+  box-shadow: 0 1px 0 var(--line);
 }
 .inner {
   max-width: 1440px;
