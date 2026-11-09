@@ -12,10 +12,12 @@
 | :-- | :-- |
 | 實作的唯一依據（數字、視圖規格、互動規則、步驟） | `docs/HW03_實作規格書.md` |
 | 尚未完成的事 | `docs/待辦備忘錄.md` |
-| 設計理念與報告論述 | `docs/視覺化系統設計發想書_TamaraMunzner框架.md` |
+| 視覺樣式（顏色、字型、版面、選取方式） | `docs/前端設計方向_更正單.md` |
+| 審查意見與模擬使用者測試（改前端前參考） | `docs/第12步_審查意見.md`、`docs/第13步_使用者測試.md` |
+| 設計理念與報告論述（期中提案版） | `docs/視覺化系統設計發想書_TamaraMunzner框架.md` |
 | 作業說明（對外） | `README.md` |
 
-規格書與發想書衝突時，以規格書為準。
+規格書與發想書衝突時，以規格書為準。圖表代號：A 排名橫條圖、B 等積方塊地圖、C 散佈圖（發想書與簡報為舊代號）。
 
 ---
 
@@ -30,6 +32,7 @@
 | `.claude/hooks/check-on-data-edit.mjs` | Claude 修改資料處理相關檔案後，自動執行 `npm run check`；失敗時把結果回報給 Claude | 每次 Edit／Write 之後 |
 | `.claude/skills/step-done/` | `/step-done <步驟>`：步驟完成時的檢查、截圖、更新文件、commit 流程 | 使用者輸入指令時 |
 | `.claude/agents/vis-reviewer.md` | 視覺化審查員：依資料鐵律與 Munzner 原則唯讀審查 | 需要審查時由 Claude 委派，或使用者指名 |
+| `.claude/skills/`（其他） | 課程複製來的設計與資料 skills，清單見 `.claude/skills/README.md` | 相關任務時由 Claude 叫用 |
 
 個人專用的設定放 `.claude/settings.local.json` 或專案根目錄的 `CLAUDE.local.md`，兩者都不提交到 git。
 
