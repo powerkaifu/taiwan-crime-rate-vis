@@ -39,6 +39,18 @@ description: >-
 
 ## 目前的 skills
 
-| 指令 | 用途 |
-| :-- | :-- |
-| `/step-done <步驟>` | 步驟完成時的驗收、截圖、更新文件、commit 流程 |
+與 `.claude/CLAUDE.md`、`.claude/rules/` 衝突時，一律以專案規則為準（特別是資料鐵律）。
+
+| 指令 | 來源 | 用途 |
+| :-- | :-- | :-- |
+| `/step-done <步驟>` | hw03 專屬 | 步驟完成時的驗收、截圖、更新文件、commit 流程（只能手動呼叫） |
+| `/task-abstraction` | 課程 `.agents/skills/` 複製 | Munzner 任務抽象化：領域問題 → {Action, Target} → 視覺編碼 |
+| `/d3-chart-builder` | 課程 `.agents/skills/` 複製 | D3 圖表實作 |
+| `/dataset-curator` | 課程 `.agents/skills/` 複製 | 資料集整理 |
+| `/uiux-design-system` | 課程 `.agents/skills/` 複製 | 視覺化儀表板 UI/UX 設計系統 |
+| `/frontend-design` | anthropics/skills（含 LICENSE.txt） | 前端視覺設計方向 |
+| `/design-taste-frontend` | leonxlnx/taste-skill | 前端設計品味 |
+| `/imagegen-frontend-web` | leonxlnx/taste-skill | 網頁設計參考圖生成 |
+| `/imagegen-frontend-mobile` | leonxlnx/taste-skill | 行動 App 設計參考圖生成 |
+
+課程 `.agents/skills/` 的原檔仍保留給另一套工具使用；兩邊修改時要記得同步。
