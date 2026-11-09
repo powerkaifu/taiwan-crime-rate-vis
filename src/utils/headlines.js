@@ -22,12 +22,17 @@ export function headlineA(counties, type, mode, filter = 'all') {
   return `${scope}犯罪率最高是${topRate.id}（${nat}件數第 ${topRate[type].rankCount}）；件數最多的${topCount.id}犯罪率排${nat}第 ${topCount[type].rankRate}`
 }
 
-/** 圖 C（散佈圖）：犯罪率高於中位數、破獲率低於中位數的縣市（中位數以全國 22 縣市計算） */
-export function headlineScatter(counties, meta, type, filter = 'all') {
+/** 犯罪率高於中位數、破獲率低於中位數的縣市，依犯罪率排序（中位數以全國 22 縣市計算） */
+export function scatterHits(counties, meta, type, filter = 'all') {
   const { medianRate, medianClearance } = meta.types[type]
-  const hit = subset(counties, filter)
+  return subset(counties, filter)
     .filter((c) => c[type].clearance !== null && c[type].rate > medianRate && c[type].clearance < medianClearance)
     .sort(byRate(type))
+}
+
+/** 圖 C（散佈圖）標題：點名上面那些縣市（4 個以內全列，超過列前 3 個） */
+export function headlineScatter(counties, meta, type, filter = 'all') {
+  const hit = scatterHits(counties, meta, type, filter)
   const scope = SCOPE[filter]
   if (hit.length === 0) return `${scope}沒有縣市同時犯罪率高於、破獲率低於全國中位數`
   const names = hit.length <= 4 ? hit.map((c) => c.id).join('、') : `${hit.slice(0, 3).map((c) => c.id).join('、')}等`

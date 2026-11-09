@@ -64,6 +64,7 @@ onBeforeUnmount(() => {
   <div ref="barRef" class="control-bar" :class="{ stuck }">
     <div class="inner">
       <div class="groups">
+        <span class="applies">三張圖共用</span>
         <div v-for="g in groups" :key="g.label" class="group" role="group" :aria-label="g.label">
           <span class="label">{{ g.label }}</span>
           <div class="segmented">
@@ -78,7 +79,6 @@ onBeforeUnmount(() => {
             </button>
           </div>
         </div>
-        <span class="applies">套用到 A、B、C 三張圖</span>
       </div>
       <p class="status live" aria-live="polite">
         <span>{{ status }}</span>
@@ -183,7 +183,10 @@ onBeforeUnmount(() => {
 }
 .applies {
   font-size: var(--font-min);
-  color: var(--slate-light);
+  font-weight: 700;
+  color: var(--ink);
+  padding-right: 16px;
+  border-right: 1px solid var(--line);
 }
 .status {
   display: flex;

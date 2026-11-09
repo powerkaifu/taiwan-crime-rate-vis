@@ -28,6 +28,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     <header class="wrap intro">
       <h1>同一份資料，排序差多少？</h1>
       <p class="subtitle">台灣 22 縣市 2025 年刑案：用件數排、用每十萬人犯罪率排，名次各是多少。資料：{{ meta.source }}</p>
+      <p class="caveat">每十萬人犯罪率＝警察紀錄的案件數 ÷ 戶籍人口 × 10 萬，只能比較縣市之間的差異，不代表個人遇害的風險。</p>
       <StoryCards />
     </header>
     <ControlBar />
@@ -69,6 +70,12 @@ h1 {
   margin: 0;
   max-width: 64em;
   color: var(--slate);
+}
+/* 使用者測試：第一眼容易把犯罪率讀成「危險程度」，提醒放在首屏 */
+.caveat {
+  margin: 6px 0 0;
+  font-size: var(--font-min);
+  color: var(--ink);
 }
 /* 版面（第 12 步）：第一列 A 排名橫條圖＋B 等積方塊地圖並排，名次與地理同時看得到；第二列 C 散佈圖全寬 */
 .charts {

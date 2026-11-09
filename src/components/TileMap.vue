@@ -283,7 +283,7 @@ svg :deep(.halo) {
   opacity: 0;
 }
 svg :deep(.tile.focused .halo) {
-  opacity: 0.7;
+  opacity: 0.35;
 }
 svg :deep(.tile.pinned .halo),
 svg :deep(.tile:focus-visible .halo) {

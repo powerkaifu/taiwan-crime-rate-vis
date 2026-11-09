@@ -6,7 +6,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useCrimeData } from '../composables/useCrimeData.js'
 import { emphasis, useViewState } from '../composables/useViewState.js'
 import { fmtPct, fmtRate } from '../utils/format.js'
-import { headlineScatter } from '../utils/headlines.js'
+import { headlineScatter, scatterHits } from '../utils/headlines.js'
 import { dur } from '../utils/motion.js'
 import { CARD_CHROME, useLayoutWidth } from '../composables/useLayoutWidth.js'
 import ChartDataTable from './ChartDataTable.vue'
@@ -52,7 +52,10 @@ function labelledIds(data, type) {
   const byRate = [...data].sort((a, b) => b[type].rate - a[type].rate)
   const byClr = [...data].sort((a, b) => a[type].clearance - b[type].clearance)
   const extremes = [byRate[0], byClr[0], byClr[byClr.length - 1]]
-  return [...new Set([...extremes, ...data.filter((d) => d.isSixCity)].map((d) => d.id))]
+  // 標題點名的縣市（最多 3 個）也一定要標出名字
+  const hits = scatterHits(counties, meta, type, state.filter)
+  const named = hits.length <= 4 ? hits : hits.slice(0, 3)
+  return [...new Set([...extremes, ...named, ...data.filter((d) => d.isSixCity)].map((d) => d.id))]
 }
 
 /** 簡單的標籤擺放：每個標籤試 6 個位置，選第一個不與其他標籤、圖框重疊的 */
@@ -128,6 +131,10 @@ function draw(animate) {
   g.select('text.ref100-label')
     .transition(t)
     .attr('y', y(100) + 18)
+    .attr('opacity', isViolent.value ? 1 : 0)
+  g.select('text.over100-label')
+    .transition(t)
+    .attr('y', top + 18)
     .attr('opacity', isViolent.value ? 1 : 0)
 
   // 中位數分區線
@@ -273,7 +280,13 @@ function build() {
     .attr('x', innerW - 6)
     .attr('text-anchor', 'end')
     .attr('opacity', 0)
-    .text('100% 參考線：破獲數含往年積案')
+    .text('100% 參考線')
+  g.append('text')
+    .attr('class', 'ref100-label over100-label')
+    .attr('x', innerW / 2)
+    .attr('text-anchor', 'middle')
+    .attr('opacity', 0)
+    .text('灰色區：破獲率超過 100%，因為破獲數包含往年積案，不是算錯')
   g.append('line').attr('class', 'med med-x').attr('y1', 0).attr('y2', innerH)
   g.append('line').attr('class', 'med med-y').attr('x1', 0).attr('x2', innerW)
   g.append('text').attr('class', 'med-label med-x-label').attr('y', innerH - 6)
@@ -319,6 +332,8 @@ onMounted(build)
 watch(svgW, build)
 
 watch(() => state.crimeType, () => draw(true))
+// 篩選會改變標題點名的縣市，標籤要重新擺放
+watch(() => state.filter, () => draw(false))
 watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
 </script>
 
@@ -459,7 +474,7 @@ svg :deep(.dot .halo) {
   opacity: 0;
 }
 svg :deep(.dot.focused .halo) {
-  opacity: 0.7;
+  opacity: 0.35;
 }
 svg :deep(.dot.pinned .halo),
 svg :deep(.dot:focus-visible .halo) {

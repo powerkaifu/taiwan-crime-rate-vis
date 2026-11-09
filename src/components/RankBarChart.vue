@@ -66,6 +66,7 @@ function draw(animate) {
     : d3.max(data, value)
   x.domain([0, maxV || 1]).nice()
   const clipped = (d) => showCI.value && d[type].ciHigh > x.domain()[1]
+  const tieCount = d3.rollup(counties, (v) => v.length, (c) => c[type].rankCount)
 
   const t = d3.transition().duration(animate ? dur(DURATION) : 0).ease(d3.easeCubicOut)
 
@@ -85,7 +86,7 @@ function draw(animate) {
   headG
     .select('text.h-rank')
     .attr('x', innerW + RANK_DX)
-    .text(state.barMode === 'count' ? '件數名次（犯罪率名次）' : '件數名次 → 犯罪率名次')
+    .text(state.barMode === 'count' ? '件數名次（換算後名次）' : '件數名次 → 換算後名次')
 
   const rows = g
     .selectAll('g.row')
@@ -166,15 +167,19 @@ function draw(animate) {
       const r = d[type]
       const el = d3.select(this)
       el.selectAll('tspan').remove()
+      // 件數同分時名次並列（competition ranking），標「並列」避免誤會為資料錯誤
+      const tie = (tieCount.get(r.rankCount) ?? 0) > 1
       if (state.barMode === 'rate') {
         // 更正單：舊名次（件數）畫刪除線 → 新名次（犯罪率）
         if (r.rankDelta !== 0) {
           el.append('tspan').attr('class', 'old').text(r.rankCount)
+          if (tie) el.append('tspan').attr('class', 'tie').text('並列')
           el.append('tspan').attr('class', 'arrow').text(' → ')
         }
         el.append('tspan').attr('class', 'new').text(r.rankRate)
       } else {
         el.append('tspan').attr('class', 'new').text(r.rankCount)
+        if (tie) el.append('tspan').attr('class', 'tie').text('並列')
         el.append('tspan').attr('class', 'aux').text(`（${r.rankRate}）`)
       }
       // 名次變動：件數名次 − 率名次；正值＝換算犯罪率後名次往前
@@ -245,11 +250,14 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
       </div>
       <span class="only">只影響這張圖</span>
     </div>
+    <p v-show="!showTable" class="key">
+      <span class="swatch" :class="state.barMode === 'count' ? 'sw-count' : 'sw-rate'" />
+      <template v-if="state.barMode === 'rate'">青色＝每十萬人犯罪率。右側「<s>17</s> → 1」：件數排第 17，換算人口後排第 1；▲ 名次往前（犯罪率排名比件數排名高），▼ 往後。</template>
+      <template v-else>灰色＝發生件數（還沒依人口換算）。括號內是換算成每十萬人犯罪率後的名次。</template>
+    </p>
     <ChartDataTable v-if="showTable" kind="A" />
     <svg v-show="!showTable" ref="svgRef" :viewBox="`0 0 ${W} ${H}`" :width="W" :height="H" role="group" :aria-label="`${typeLabel}各縣市排名橫條圖，可用 Tab 鍵逐一瀏覽縣市`" />
     <ul v-show="!showTable" class="notes">
-      <li v-if="state.barMode === 'rate'">刪除線是件數名次，箭頭後是換算每十萬人犯罪率後的名次；▲▼ 為名次往前或往後幾名。</li>
-      <li v-else>括號內是換算每十萬人犯罪率後的名次；▲▼ 為換算後名次往前或往後幾名。</li>
       <li>名次只差 2 名以內{{ isViolent ? '，或件數少於 30' : '' }}時，▲▼ 以淡色顯示：差距小，不宜過度解讀。</li>
       <li v-if="showCI">細線為犯罪率的 95% 信賴區間；▸ 表示區間超出座標範圍。</li>
       <li v-if="isViolent">「件數少」：件數少於 30，犯罪率容易因少數案件大幅變動。</li>
@@ -378,11 +386,19 @@ svg :deep(.band) {
   fill: var(--mark);
   opacity: 0;
 }
+/* 懸停＝淡黃；鎖定＝實心黃＋粗體（使用者測試：兩者要分得出來） */
 svg :deep(.row.focused .band) {
-  opacity: 0.55;
+  opacity: 0.3;
 }
 svg :deep(.row.pinned .band) {
   opacity: 1;
+}
+svg :deep(.row.pinned text) {
+  font-weight: 700;
+}
+svg :deep(.rank .tie) {
+  fill: var(--slate-light);
+  font-size: 12px;
 }
 svg :deep(.row:focus-visible .band) {
   opacity: 1;
@@ -396,9 +412,7 @@ svg :deep(.bar) {
 svg :deep(.mode-count .bar) {
   fill: var(--count);
 }
-svg :deep(.row.focused .name) {
-  font-weight: 700;
-}
+
 svg :deep(.ci) {
   stroke: var(--ink);
   stroke-width: 1.5;
@@ -442,6 +456,29 @@ svg :deep(.rank .small) {
   font-size: var(--font-min);
   color: var(--slate-light);
   line-height: 1.6;
+}
+.key {
+  margin: 4px 0 8px;
+  font-size: var(--font-min);
+  color: var(--ink);
+  line-height: 1.6;
+}
+.key s {
+  color: var(--slate-light);
+}
+.swatch {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 2px;
+  vertical-align: 0;
+}
+.sw-rate {
+  background: var(--rate);
+}
+.sw-count {
+  background: var(--count);
 }
 .only {
   font-size: var(--font-min);
