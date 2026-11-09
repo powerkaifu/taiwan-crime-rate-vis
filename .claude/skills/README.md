@@ -33,7 +33,7 @@ description: >-
 
 ## 撰寫原則
 
-- 內容必須符合專案根目錄的 `CLAUDE.md`（資料鐵律、工作流程等）。
+- 內容必須符合 `.claude/CLAUDE.md`（資料鐵律、工作流程等）。
 - 只寫可重複使用的流程，一次性的操作不需要做成 skill。
 - 涉及數字時，指向 `data/csv/` 與 `npm run check`，不要把數字寫死在 skill 裡。
 
