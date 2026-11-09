@@ -185,7 +185,7 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
       <button class="table-btn" :aria-pressed="showTable" @click="showTable = !showTable">{{ showTable ? '顯示圖表' : '資料表' }}</button>
     </div>
     <p class="caption">每個縣市一格、大小相同；顏色越深，每十萬人犯罪率越高。左欄為離島。</p>
-    <ChartDataTable v-if="showTable" kind="B" />
+    <ChartDataTable v-if="showTable" kind="B" :style="{ width: `${W}px` }" />
     <svg v-show="!showTable" ref="svgRef" :viewBox="`0 0 ${W} ${H}`" :width="W" :height="H" role="img" :aria-label="`${typeLabel}各縣市犯罪率等積方塊地圖`" />
     <div v-show="!showTable" class="legend" aria-hidden="true">
       <span>{{ legend.min }}</span>

@@ -30,6 +30,15 @@ const DURATION = 750
 // 各案類的 Y 軸範圍（規格書 §4.2 預期值）
 const Y_DOMAIN = { 全般: [50, 100], 暴力: [75, 120], 竊盜: [50, 100] }
 
+// 人口圖例：半徑用和圓點相同的比例尺計算（最大推估人口 → 22px，最小 4px）
+const R_MAX = 22
+const maxPop = d3.max(counties, (d) => d.pop)
+const legendR = (pop) => Math.max(4, R_MAX * Math.sqrt(pop / maxPop))
+const popLegend = [
+  { label: '10 萬', r: legendR(1e5) },
+  { label: '100 萬', r: legendR(1e6) },
+  { label: '400 萬', r: legendR(4e6) },
+]
 const headline = computed(() => headlineScatter(counties, meta, state.crimeType, state.filter))
 const typeLabel = computed(() => ({ 全般: '全般刑案', 暴力: '暴力犯罪', 竊盜: '竊盜' })[state.crimeType])
 const isViolent = computed(() => state.crimeType === '暴力')
@@ -270,7 +279,7 @@ function build() {
   x = d3.scaleLinear().range([0, innerW])
   y = d3.scaleLinear().range([innerH, 0])
   // 面積對應人口；最小半徑 4px，避免連江（約 1.4 萬人）小到看不見
-  const rScale = d3.scaleSqrt().domain([0, d3.max(counties, (d) => d.pop)]).range([0, 22])
+  const rScale = d3.scaleSqrt().domain([0, maxPop]).range([0, R_MAX])
   r = (pop) => Math.max(4, rScale(pop))
 
   g.append('rect').attr('class', 'over100').attr('x', 0).attr('width', innerW).attr('opacity', 0)
@@ -346,8 +355,19 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
       </div>
       <button class="table-btn" :aria-pressed="showTable" @click="showTable = !showTable">{{ showTable ? '顯示圖表' : '資料表' }}</button>
     </div>
-    <p class="caption">虛線為 22 縣市中位數；點越大代表推估人口越多；固定標出六都與極端值，其他縣市移上去看名稱。</p>
-    <ChartDataTable v-if="showTable" kind="C" />
+    <div class="caption-row">
+      <p class="caption">虛線為 22 縣市中位數；點越大代表推估人口越多；固定標出六都與極端值，其他縣市移上去看名稱。</p>
+      <span v-show="!showTable" class="pop-legend" aria-hidden="true">
+        <span>推估人口：</span>
+        <template v-for="l in popLegend" :key="l.label">
+          <svg :width="l.r * 2 + 2" :height="l.r * 2 + 2" :viewBox="`0 0 ${l.r * 2 + 2} ${l.r * 2 + 2}`">
+            <circle :cx="l.r + 1" :cy="l.r + 1" :r="l.r" />
+          </svg>
+          <span>{{ l.label }}</span>
+        </template>
+      </span>
+    </div>
+    <ChartDataTable v-if="showTable" kind="C" :style="{ width: `${svgW}px` }" />
     <svg v-show="!showTable" ref="svgRef" :viewBox="`0 0 ${svgW} ${H}`" :width="svgW" :height="H" role="img" :aria-label="`${typeLabel}各縣市犯罪率與破獲率散佈圖`" />
     <ul v-show="!showTable" class="notes">
       <li>破獲率＝破獲件數 ÷ 發生件數；破獲數包含往年積案，所以可能超過 100%，不能當成「當年案件被破獲的比例」。</li>
@@ -375,11 +395,36 @@ h2 {
   line-height: 1.4;
   margin: 2px 0 0;
 }
+.caption-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 24px;
+  margin: 8px 0 4px;
+}
 .caption,
 .note {
   color: var(--color-ink-soft);
   font-size: var(--font-min);
-  margin: 8px 0 4px;
+  margin: 0;
+}
+.pop-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-min);
+  color: var(--slate-light);
+}
+.pop-legend svg {
+  display: inline-block;
+  overflow: visible;
+}
+.pop-legend circle {
+  fill: var(--rate);
+  fill-opacity: 0.25;
+  stroke: var(--rate);
+  stroke-width: 1.5;
 }
 .notes {
   margin: 12px 0 0;

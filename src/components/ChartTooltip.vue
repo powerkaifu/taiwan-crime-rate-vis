@@ -11,12 +11,18 @@ const { state } = useViewState()
 const byId = new Map(counties.map((c) => [c.id, c]))
 
 const pos = ref({ x: 0, y: 0 })
+const tipRef = ref(null)
 const OFFSET = 16
 const BOX_W = 320
 function onMove(e) {
-  // 靠近視窗右緣時改放在滑鼠左側
+  // 靠近視窗右緣時改放在滑鼠左側；靠近視窗底緣時改放在滑鼠上方
   const x = e.clientX + OFFSET + BOX_W > window.innerWidth ? e.clientX - OFFSET - BOX_W : e.clientX + OFFSET
-  pos.value = { x, y: e.clientY + OFFSET }
+  const tipH = tipRef.value?.offsetHeight || 220
+  const y =
+    e.clientY + OFFSET + tipH > window.innerHeight
+      ? Math.max(8, e.clientY - OFFSET - tipH)
+      : e.clientY + OFFSET
+  pos.value = { x, y }
 }
 onMounted(() => window.addEventListener('mousemove', onMove))
 onBeforeUnmount(() => window.removeEventListener('mousemove', onMove))
@@ -32,6 +38,7 @@ const medianClr = computed(() => fmtPct(meta.types[state.crimeType].medianCleara
 <template>
   <div
     v-if="county"
+    ref="tipRef"
     class="tooltip"
     role="status"
     :style="{ left: `${pos.x}px`, top: `${pos.y}px`, width: `${BOX_W}px` }"
