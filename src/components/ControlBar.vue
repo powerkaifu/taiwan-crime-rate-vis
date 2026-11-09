@@ -107,7 +107,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 .inner {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 20px 48px 16px; /* 第 12 步：加大留白，控制列不擁擠 */
+  padding: 28px 48px 24px; /* 加大上下留白，控制列不擁擠 */
 }
 .groups {
   display: flex;
@@ -156,7 +156,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   outline-color: var(--mark);
 }
 .status {
-  margin: 14px 0 0;
+  margin: 18px 0 0;
   font-size: var(--font-min);
   color: var(--ink);
 }
