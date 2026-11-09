@@ -5,12 +5,14 @@ import * as d3 from 'd3'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useCrimeData } from '../composables/useCrimeData.js'
 import { emphasis, useViewState } from '../composables/useViewState.js'
+import ChartDataTable from './ChartDataTable.vue'
 import { TILE_COLS, TILE_LAYOUT, TILE_ROWS } from '../utils/tileLayout.js'
 
 const { counties } = useCrimeData()
 const { state, hover, togglePin } = useViewState()
 
 const svgRef = ref(null)
+const showTable = ref(false)
 const CELL = 64
 const GAP = 6
 const ISLAND_GAP = CELL / 2 // 離島欄與本島之間多留半格
@@ -144,10 +146,14 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
 
 <template>
   <section class="chart-card">
-    <h2>C 等積方塊地圖：{{ typeLabel }}</h2>
+    <div class="head">
+      <h2>C 等積方塊地圖：{{ typeLabel }}</h2>
+      <button class="table-btn" :aria-pressed="showTable" @click="showTable = !showTable">{{ showTable ? '顯示圖表' : '資料表' }}</button>
+    </div>
     <p class="caption">每個縣市一格、大小相同；顏色越深，每十萬人犯罪率越高。左欄為離島。</p>
-    <svg ref="svgRef" :viewBox="`0 0 ${W} ${H}`" :width="W" :height="H" role="img" :aria-label="`${typeLabel}各縣市犯罪率等積方塊地圖`" />
-    <div class="legend" aria-hidden="true">
+    <ChartDataTable v-if="showTable" kind="C" />
+    <svg v-show="!showTable" ref="svgRef" :viewBox="`0 0 ${W} ${H}`" :width="W" :height="H" role="img" :aria-label="`${typeLabel}各縣市犯罪率等積方塊地圖`" />
+    <div v-show="!showTable" class="legend" aria-hidden="true">
       <span>{{ legend.min }}</span>
       <span class="ramp" :style="{ background: `linear-gradient(to right, ${legend.stops.join(',')})` }" />
       <span>{{ legend.max }}</span>
@@ -192,6 +198,27 @@ h2 {
 }
 .unit {
   color: var(--color-muted);
+}
+
+.table-btn {
+  font: inherit;
+  font-size: var(--font-min);
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-ink-soft);
+  cursor: pointer;
+}
+.table-btn:focus-visible {
+  outline: 3px solid var(--color-accent-2);
+  outline-offset: 2px;
+}
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
 }
 svg {
   display: block;

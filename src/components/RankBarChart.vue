@@ -5,11 +5,13 @@ import * as d3 from 'd3'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useCrimeData } from '../composables/useCrimeData.js'
 import { emphasis, useViewState } from '../composables/useViewState.js'
+import ChartDataTable from './ChartDataTable.vue'
 
 const { counties } = useCrimeData()
 const { state, setBarMode, hover, togglePin } = useViewState()
 
 const svgRef = ref(null)
+const showTable = ref(false)
 const ROW_H = 26
 const M = { top: 32, right: 340, bottom: 8, left: 76 }
 const W = 1086 // 與下方 B、C 並排的總寬對齊
@@ -149,6 +151,8 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
   <section class="chart-card">
     <header class="chart-header">
       <h2>A 排名橫條圖：{{ typeLabel }}</h2>
+      <div class="head-right">
+      <button class="table-btn" :aria-pressed="showTable" @click="showTable = !showTable">{{ showTable ? '顯示圖表' : '資料表' }}</button>
       <div class="toggle" role="group" aria-label="排序依據">
         <button :class="{ active: state.barMode === 'count' }" :aria-pressed="state.barMode === 'count'" @click="setBarMode('count')">
           發生件數
@@ -157,12 +161,14 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
           每十萬人犯罪率
         </button>
       </div>
+      </div>
     </header>
     <p class="caption">
       {{ state.barMode === 'count' ? '依發生件數排序' : '依每十萬人犯罪率排序' }}；右側為全國名次，▲▼ 為換算犯罪率後的名次變化。
       <span v-if="showCI">細線為 95% 信賴區間，▸ 表示區間超出座標範圍。</span>
     </p>
-    <svg ref="svgRef" :viewBox="`0 0 ${W} ${H}`" :width="W" :height="H" role="img" :aria-label="`${typeLabel}各縣市排名橫條圖`" />
+    <ChartDataTable v-if="showTable" kind="A" />
+    <svg v-show="!showTable" ref="svgRef" :viewBox="`0 0 ${W} ${H}`" :width="W" :height="H" role="img" :aria-label="`${typeLabel}各縣市排名橫條圖`" />
   </section>
 </template>
 
@@ -213,6 +219,32 @@ h2 {
 .toggle button:focus-visible {
   outline: 3px solid var(--color-accent-2);
   outline-offset: 2px;
+}
+
+.table-btn {
+  font: inherit;
+  font-size: var(--font-min);
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-ink-soft);
+  cursor: pointer;
+}
+.table-btn:focus-visible {
+  outline: 3px solid var(--color-accent-2);
+  outline-offset: 2px;
+}
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.head-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 svg {
   display: block;

@@ -4,6 +4,7 @@ import ChartTooltip from './components/ChartTooltip.vue'
 import ControlBar from './components/ControlBar.vue'
 import RankBarChart from './components/RankBarChart.vue'
 import ScatterPlot from './components/ScatterPlot.vue'
+import SiteFooter from './components/SiteFooter.vue'
 import StoryCards from './components/StoryCards.vue'
 import TileMap from './components/TileMap.vue'
 import { useCrimeData } from './composables/useCrimeData.js'
@@ -34,6 +35,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       <ScatterPlot class="chart-b" />
       <TileMap class="chart-c" />
     </div>
+    <SiteFooter />
     <ChartTooltip />
   </main>
 </template>

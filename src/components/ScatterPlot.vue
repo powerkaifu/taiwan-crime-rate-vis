@@ -6,11 +6,13 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useCrimeData } from '../composables/useCrimeData.js'
 import { emphasis, useViewState } from '../composables/useViewState.js'
 import { REGION_COLORS } from '../utils/colors.js'
+import ChartDataTable from './ChartDataTable.vue'
 
 const { counties, meta } = useCrimeData()
 const { state, hover, togglePin } = useViewState()
 
 const svgRef = ref(null)
+const showTable = ref(false)
 const W = 640
 const H = 540
 const M = { top: 24, right: 28, bottom: 56, left: 64 }
@@ -235,13 +237,17 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
 
 <template>
   <section class="chart-card">
-    <h2>B 散佈圖：{{ typeLabel }}犯罪率 × 破獲率</h2>
+    <div class="head">
+      <h2>B 散佈圖：{{ typeLabel }}犯罪率 × 破獲率</h2>
+      <button class="table-btn" :aria-pressed="showTable" @click="showTable = !showTable">{{ showTable ? '顯示圖表' : '資料表' }}</button>
+    </div>
     <p class="caption">
       虛線為 22 縣市中位數；點越大代表推估人口越多。
       <span v-if="isViolent">細線為犯罪率 95% 信賴區間。</span>
     </p>
-    <svg ref="svgRef" :viewBox="`0 0 ${W} ${H}`" :width="W" :height="H" role="img" :aria-label="`${typeLabel}各縣市犯罪率與破獲率散佈圖`" />
-    <ul class="legend" aria-label="區域圖例">
+    <ChartDataTable v-if="showTable" kind="B" />
+    <svg v-show="!showTable" ref="svgRef" :viewBox="`0 0 ${W} ${H}`" :width="W" :height="H" role="img" :aria-label="`${typeLabel}各縣市犯罪率與破獲率散佈圖`" />
+    <ul v-show="!showTable" class="legend" aria-label="區域圖例">
       <li v-for="reg in regions" :key="reg">
         <span class="swatch" :style="{ background: REGION_COLORS[reg] }" />{{ reg }}
       </li>
@@ -284,6 +290,27 @@ h2 {
   border-radius: 50%;
   margin-right: 6px;
   vertical-align: -1px;
+}
+
+.table-btn {
+  font: inherit;
+  font-size: var(--font-min);
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-ink-soft);
+  cursor: pointer;
+}
+.table-btn:focus-visible {
+  outline: 3px solid var(--color-accent-2);
+  outline-offset: 2px;
+}
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
 }
 svg {
   display: block;
