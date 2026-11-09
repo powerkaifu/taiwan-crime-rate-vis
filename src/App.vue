@@ -34,8 +34,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     <main class="wrap">
       <div class="charts">
         <RankBarChart class="chart-a" />
-        <ScatterPlot class="chart-b" />
         <TileMap class="chart-c" />
+        <ScatterPlot class="chart-b" />
       </div>
       <SiteFooter />
     </main>
@@ -70,14 +70,26 @@ h1 {
   max-width: 64em;
   color: var(--slate);
 }
-/* 版面：A 單獨一列，B、C 並排（最小寬度 1280px 也放得下） */
+/* 版面（第 12 步）：第一列 A＋C 並排，名次與地理同時看得到；第二列 B 全寬 */
 .charts {
   display: grid;
   grid-template-columns: max-content max-content;
+  justify-content: space-between;
   gap: 24px;
-  align-items: start;
+  align-items: stretch;
 }
-.chart-a {
+.chart-b {
   grid-column: 1 / -1;
+}
+/* A、C 的寬度由圖表 svg 決定，圖說文字跟著換行，不把卡片撐寬 */
+.chart-a,
+.chart-c {
+  width: min-content;
+}
+/* 從發現卡捲動過來時，避開固定在頂端的控制列 */
+.chart-a,
+.chart-b,
+.chart-c {
+  scroll-margin-top: 120px;
 }
 </style>

@@ -3,7 +3,7 @@ import { reactive, readonly } from 'vue'
 
 const state = reactive({
   crimeType: '全般', // '全般' | '暴力' | '竊盜'
-  barMode: 'count', // 'count' | 'rate'（只影響圖表 A）
+  barMode: 'rate', // 'rate' | 'count'（只影響圖表 A；預設犯罪率）
   filter: 'all', // 'all' | 'six' | 'nonSix'
   hovered: null, // 縣市 id
   pinned: null, // 縣市 id

@@ -5,16 +5,17 @@ import * as d3 from 'd3'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useCrimeData } from '../composables/useCrimeData.js'
 import { emphasis, useViewState } from '../composables/useViewState.js'
+import { headlineA } from '../utils/headlines.js'
 import ChartDataTable from './ChartDataTable.vue'
 
 const { counties } = useCrimeData()
-const { state, hover, togglePin } = useViewState()
+const { state, hover, togglePin, setBarMode } = useViewState()
 
 const svgRef = ref(null)
 const showTable = ref(false)
-const ROW_H = 26
-const M = { top: 32, right: 340, bottom: 8, left: 76 }
-const W = 1086 // 與下方 B、C 並排的總寬對齊
+const ROW_H = 20 // 第 12 步：壓縮列高，讓 A 與 C 並排時一屏看得完
+const M = { top: 28, right: 290, bottom: 8, left: 76 }
+const W = 714 // 與右側圖 C 並排：A 卡片 764＋間距 24＋C 卡片 376＝1164
 const H = M.top + counties.length * ROW_H + M.bottom
 const innerW = W - M.left - M.right
 const DURATION = 750
@@ -24,6 +25,12 @@ const typeLabel = computed(() => ({ 全般: '全般刑案', 暴力: '暴力犯�
 const showCI = computed(() => state.crimeType === '暴力' && state.barMode === 'rate')
 
 const value = (c) => (state.barMode === 'count' ? c[state.crimeType].count : c[state.crimeType].rate)
+const headline = computed(() => headlineA(counties, state.crimeType, state.barMode))
+const MODES = [
+  { key: 'rate', label: '每十萬人犯罪率' },
+  { key: 'count', label: '發生件數' },
+]
+
 const fmtValue = (v) => (state.barMode === 'count' ? `${d3.format(',')(v)} 件` : d3.format(',.2f')(v))
 
 let g, axisG, x
@@ -65,7 +72,7 @@ function draw(animate) {
       r.append('line').attr('class', 'ci')
       r.append('text').attr('class', 'ci-arrow').attr('dy', '0.35em').text('▸')
       r.append('text').attr('class', 'val').attr('x', innerW + 12)
-      r.append('text').attr('class', 'rank').attr('x', innerW + 112)
+      r.append('text').attr('class', 'rank').attr('x', innerW + 104)
       return r
     })
 
@@ -149,14 +156,27 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
 
 <template>
   <section class="chart-card">
-    <header class="chart-header">
-      <h2>A 排名橫條圖：{{ typeLabel }}</h2>
-      <div class="head-right">
-        <button class="table-btn" :aria-pressed="showTable" @click="showTable = !showTable">{{ showTable ? '顯示圖表' : '資料表' }}</button>
+    <p class="kicker">A 排名橫條圖・{{ typeLabel }}</p>
+    <h2>{{ headline }}</h2>
+    <div class="chart-header">
+      <div class="sort" role="group" aria-label="圖 A 排序依據">
+        <span class="label">排序依據</span>
+        <div class="segmented">
+          <button
+            v-for="o in MODES"
+            :key="o.key"
+            :class="{ active: state.barMode === o.key }"
+            :aria-pressed="state.barMode === o.key"
+            @click="setBarMode(o.key)"
+          >
+            {{ o.label }}
+          </button>
+        </div>
       </div>
-    </header>
+      <button class="table-btn" :aria-pressed="showTable" @click="showTable = !showTable">{{ showTable ? '顯示圖表' : '資料表' }}</button>
+    </div>
     <p class="caption">
-      {{ state.barMode === 'count' ? '依發生件數排序' : '依每十萬人犯罪率排序' }}；右側為全國名次，▲▼ 為換算犯罪率後的名次變化。
+      右側為全國名次，▲▼ 為換算犯罪率後的名次變化。
       <span v-if="showCI">細線為 95% 信賴區間，▸ 表示區間超出座標範圍。</span>
     </p>
     <ChartDataTable v-if="showTable" kind="A" />
@@ -178,9 +198,51 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
   align-items: center;
   gap: 24px;
 }
-h2 {
-  font-size: 18px;
+.kicker {
   margin: 0;
+  font-size: var(--font-min);
+  color: var(--slate-light);
+}
+h2 {
+  font-size: 20px;
+  line-height: 1.4;
+  margin: 2px 0 10px;
+}
+.sort {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.label {
+  font-size: var(--font-min);
+  color: var(--slate);
+}
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--sheet);
+  overflow: hidden;
+}
+.segmented button {
+  font: inherit;
+  font-size: var(--font-min);
+  padding: 4px 12px;
+  border: none;
+  border-left: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.segmented button:first-child {
+  border-left: none;
+}
+.segmented button:hover {
+  background: var(--paper);
+}
+.segmented button.active {
+  background: var(--ink);
+  color: var(--paper);
 }
 .caption {
   color: var(--color-ink-soft);
@@ -189,6 +251,8 @@ h2 {
 }
 
 .table-btn {
+  flex: none;
+  white-space: nowrap;
   font: inherit;
   font-size: var(--font-min);
   padding: 4px 12px;

@@ -1,20 +1,15 @@
 <script setup>
-// 固定在頂端的控制列：排序依據、案類、篩選，以及一行「目前狀態」（截圖時也帶著脈絡）
+// 固定在頂端的控制列：案類、篩選（套用到 A、B、C）＋目前狀態＋懸停或鎖定縣市的摘要
+// 「排序依據」只影響圖 A，放在圖 A 的標題列（第 12 步）
 import { computed } from 'vue'
+import { useCrimeData } from '../composables/useCrimeData.js'
 import { useViewState } from '../composables/useViewState.js'
+import { countySummary } from '../utils/headlines.js'
 
-const { state, setBarMode, setCrimeType, setFilter } = useViewState()
+const { counties, meta } = useCrimeData()
+const { state, setCrimeType, setFilter } = useViewState()
 
 const groups = computed(() => [
-  {
-    label: '排序依據',
-    current: state.barMode,
-    set: setBarMode,
-    options: [
-      { key: 'count', label: '發生件數' },
-      { key: 'rate', label: '每十萬人犯罪率' },
-    ],
-  },
   {
     label: '案類',
     current: state.crimeType,
@@ -38,39 +33,44 @@ const groups = computed(() => [
 ])
 
 const TYPE = { 全般: '全般刑案', 暴力: '暴力犯罪', 竊盜: '竊盜' }
-const MODE = { count: '發生件數', rate: '每十萬人犯罪率' }
 const FILTER = { all: '全部 22 縣市', six: '只看六都', nonSix: '只看非六都' }
-const status = computed(() => {
-  let s = `目前：${TYPE[state.crimeType]}，依${MODE[state.barMode]}排序，${FILTER[state.filter]}`
-  if (state.pinned) s += `；鎖定${state.pinned}`
-  return s + '。'
-})
+const status = computed(() => `目前：${TYPE[state.crimeType]}，${FILTER[state.filter]}。`)
+
+const byId = new Map(counties.map((c) => [c.id, c]))
+const focusId = computed(() => state.pinned ?? state.hovered)
+const summary = computed(() => (focusId.value ? countySummary(byId.get(focusId.value), meta, state.crimeType) : null))
 </script>
 
 <template>
   <div class="control-bar">
     <div class="inner">
-    <div class="groups">
-      <div v-for="g in groups" :key="g.label" class="group" role="group" :aria-label="g.label">
-        <span class="label">{{ g.label }}</span>
-        <div class="segmented">
-          <button
-            v-for="o in g.options"
-            :key="o.key"
-            :class="{ active: g.current === o.key }"
-            :aria-pressed="g.current === o.key"
-            @click="g.set(o.key)"
-          >
-            {{ o.label }}
-          </button>
+      <div class="groups">
+        <div v-for="g in groups" :key="g.label" class="group" role="group" :aria-label="g.label">
+          <span class="label">{{ g.label }}</span>
+          <div class="segmented">
+            <button
+              v-for="o in g.options"
+              :key="o.key"
+              :class="{ active: g.current === o.key }"
+              :aria-pressed="g.current === o.key"
+              @click="g.set(o.key)"
+            >
+              {{ o.label }}
+            </button>
+          </div>
         </div>
+        <span class="applies">套用到 A、B、C 三張圖</span>
       </div>
-    </div>
-    <p class="status" aria-live="polite">
-      {{ status }}
-      <span class="hint">滑鼠移到縣市上看數字；點一下鎖定，點空白處或按 Esc 取消。</span>
-    </p>
-    <p v-if="state.filter !== 'all'" class="status">其他縣市變淡但保留；名次與中位數仍以全國 22 縣市計算。</p>
+      <p class="status" aria-live="polite">
+        <span>{{ status }}</span>
+        <span v-if="summary" class="summary">
+          <span class="pin-tag">{{ state.pinned ? '已鎖定' : '游標所在' }}</span>
+          <b>{{ summary[0] }}</b>
+          <span v-for="(part, i) in summary.slice(1)" :key="i" class="part">{{ part }}</span>
+        </span>
+        <span v-else class="hint">滑鼠移到縣市上，這裡會顯示它的數字；點一下鎖定，點空白處或按 Esc 取消。</span>
+      </p>
+      <p v-if="state.filter !== 'all'" class="status note">其他縣市變淡但保留；名次與中位數仍以全國 22 縣市計算。</p>
     </div>
   </div>
 </template>
@@ -141,8 +141,37 @@ const status = computed(() => {
   font-size: var(--font-min);
   color: var(--ink);
 }
+.applies {
+  font-size: var(--font-min);
+  color: var(--slate-light);
+}
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  min-height: 1.6em;
+}
 .hint {
   color: var(--slate-light);
-  margin-left: 8px;
+}
+.summary {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+  background: var(--mark);
+}
+.summary b {
+  font-size: 16px;
+}
+.pin-tag {
+  font-size: var(--font-min);
+  color: var(--ink);
+}
+.note {
+  color: var(--slate-light);
 }
 </style>

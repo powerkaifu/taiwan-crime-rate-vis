@@ -5,6 +5,7 @@ import * as d3 from 'd3'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useCrimeData } from '../composables/useCrimeData.js'
 import { emphasis, useViewState } from '../composables/useViewState.js'
+import { headlineC } from '../utils/headlines.js'
 import ChartDataTable from './ChartDataTable.vue'
 import { TILE_COLS, TILE_LAYOUT, TILE_ROWS } from '../utils/tileLayout.js'
 
@@ -13,7 +14,7 @@ const { state, hover, togglePin } = useViewState()
 
 const svgRef = ref(null)
 const showTable = ref(false)
-const CELL = 64
+const CELL = 52 // 第 12 步：與圖 A 並排，格子 64→52
 const GAP = 6
 const ISLAND_GAP = CELL / 2 // 離島欄與本島之間多留半格
 const M = { top: 8, right: 8, bottom: 8, left: 8 }
@@ -21,6 +22,7 @@ const W = M.left + TILE_COLS * CELL + (TILE_COLS - 1) * GAP + ISLAND_GAP + M.rig
 const H = M.top + TILE_ROWS * CELL + (TILE_ROWS - 1) * GAP + M.bottom
 const DURATION = 750
 
+const headline = computed(() => headlineC(counties, state.crimeType))
 const typeLabel = computed(() => ({ 全般: '全般刑案', 暴力: '暴力犯罪', 竊盜: '竊盜' })[state.crimeType])
 const isViolent = computed(() => state.crimeType === '暴力')
 
@@ -132,10 +134,10 @@ onMounted(() => {
     .append('text')
     .attr('class', 'name')
     .attr('x', CELL / 2)
-    .attr('y', 26)
+    .attr('y', 22)
     .attr('text-anchor', 'middle')
     .text((d) => d.short)
-  cells.append('text').attr('class', 'value').attr('x', CELL / 2).attr('y', 46).attr('text-anchor', 'middle')
+  cells.append('text').attr('class', 'value').attr('x', CELL / 2).attr('y', 39).attr('text-anchor', 'middle')
 
   draw(false)
 })
@@ -147,7 +149,10 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
 <template>
   <section class="chart-card">
     <div class="head">
-      <h2>C 等積方塊地圖：{{ typeLabel }}</h2>
+      <div>
+        <p class="kicker">C 等積方塊地圖・{{ typeLabel }}</p>
+        <h2>{{ headline }}</h2>
+      </div>
       <button class="table-btn" :aria-pressed="showTable" @click="showTable = !showTable">{{ showTable ? '顯示圖表' : '資料表' }}</button>
     </div>
     <p class="caption">每個縣市一格、大小相同；顏色越深，每十萬人犯罪率越高。左欄為離島。</p>
@@ -171,9 +176,15 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
   padding: 20px 24px;
   display: inline-block;
 }
-h2 {
-  font-size: 18px;
+.kicker {
   margin: 0;
+  font-size: var(--font-min);
+  color: var(--slate-light);
+}
+h2 {
+  font-size: 20px;
+  line-height: 1.4;
+  margin: 2px 0 0;
 }
 .caption,
 .note {
@@ -184,6 +195,7 @@ h2 {
 }
 .legend {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   font-size: var(--font-min);
@@ -201,6 +213,8 @@ h2 {
 }
 
 .table-btn {
+  flex: none;
+  white-space: nowrap;
   font: inherit;
   font-size: var(--font-min);
   padding: 4px 12px;
@@ -213,7 +227,7 @@ h2 {
 .head {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
 }
 svg {

@@ -6,6 +6,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useCrimeData } from '../composables/useCrimeData.js'
 import { emphasis, useViewState } from '../composables/useViewState.js'
 import { REGION_COLORS } from '../utils/colors.js'
+import { headlineB } from '../utils/headlines.js'
 import ChartDataTable from './ChartDataTable.vue'
 
 const { counties, meta } = useCrimeData()
@@ -13,8 +14,8 @@ const { state, hover, togglePin } = useViewState()
 
 const svgRef = ref(null)
 const showTable = ref(false)
-const W = 640
-const H = 540
+const W = 1114 // 第 12 步：B 單獨一列、全寬
+const H = 480
 const M = { top: 24, right: 28, bottom: 56, left: 64 }
 const innerW = W - M.left - M.right
 const innerH = H - M.top - M.bottom
@@ -25,6 +26,7 @@ const regions = Object.keys(REGION_COLORS)
 // 各案類的 Y 軸範圍（規格書 §4.2 預期值）
 const Y_DOMAIN = { 全般: [50, 100], 暴力: [75, 120], 竊盜: [50, 100] }
 
+const headline = computed(() => headlineB(counties, meta, state.crimeType))
 const typeLabel = computed(() => ({ 全般: '全般刑案', 暴力: '暴力犯罪', 竊盜: '竊盜' })[state.crimeType])
 const isViolent = computed(() => state.crimeType === '暴力')
 const medians = computed(() => meta.types[state.crimeType])
@@ -238,7 +240,10 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
 <template>
   <section class="chart-card">
     <div class="head">
-      <h2>B 散佈圖：{{ typeLabel }}犯罪率 × 破獲率</h2>
+      <div>
+        <p class="kicker">B 散佈圖・{{ typeLabel }}犯罪率 × 破獲率</p>
+        <h2>{{ headline }}</h2>
+      </div>
       <button class="table-btn" :aria-pressed="showTable" @click="showTable = !showTable">{{ showTable ? '顯示圖表' : '資料表' }}</button>
     </div>
     <p class="caption">
@@ -264,9 +269,15 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
   padding: 20px 24px;
   display: inline-block;
 }
-h2 {
-  font-size: 18px;
+.kicker {
   margin: 0;
+  font-size: var(--font-min);
+  color: var(--slate-light);
+}
+h2 {
+  font-size: 20px;
+  line-height: 1.4;
+  margin: 2px 0 0;
 }
 .caption,
 .note {
@@ -293,6 +304,8 @@ h2 {
 }
 
 .table-btn {
+  flex: none;
+  white-space: nowrap;
   font: inherit;
   font-size: var(--font-min);
   padding: 4px 12px;
@@ -305,7 +318,7 @@ h2 {
 .head {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
 }
 svg {
