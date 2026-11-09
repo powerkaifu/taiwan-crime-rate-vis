@@ -94,12 +94,15 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   top: 0;
   z-index: 5;
   background: var(--paper);
-  transition: box-shadow 0.15s;
+  transition: box-shadow 0.2s;
   margin-bottom: 24px;
 }
 /* 分隔線用 box-shadow，不用 border：出現時不改變控制列高度，畫面不會跳 */
 .control-bar.stuck {
-  box-shadow: 0 1px 0 var(--line);
+  /* 細線＋柔和陰影（墨色 #1C2A2E 低透明度），表示控制列浮在內容上方 */
+  box-shadow:
+    0 1px 0 var(--line),
+    0 6px 16px rgba(28, 42, 46, 0.1);
 }
 .inner {
   max-width: 1440px;
