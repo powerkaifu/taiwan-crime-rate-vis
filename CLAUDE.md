@@ -1,9 +1,8 @@
-# HW03 專案規則（HW03 Project Rules）
+# HW03 專案規則（CLAUDE.md）
 
----
+本檔規範 homework/hw03「同一份資料，排序差多少？」專案的資料、程式、文件與工作流程。Claude Code 開啟本專案時會自動讀取本檔。
 
-activation: Always On
-description: 規範 homework/hw03「同一份資料，排序差多少？」專案的資料、程式、文件與工作流程。課程層級規則（課程根目錄 `.agents/rules/`，即 hw03 往上兩層）仍然適用；兩者衝突時以本檔為準。
+課程根目錄（hw03 往上兩層）的 `.agents/rules/` 是另一套工具的課程規則，可作參考；與本檔衝突時以本檔為準。
 
 ---
 
@@ -61,11 +60,11 @@ description: 規範 homework/hw03「同一份資料，排序差多少？」專�
 
 1. 一律使用繁體中文；說明簡潔，先講結論。
 2. 外部資料（新聞、文獻）要附來源網址；無法讀取或無法驗證的內容要明說，不可推測後當成事實。
-3. README 依課程層級的作業文件規則撰寫；HW3 格式待老師公布，公布後再調整。
+3. README 參考課程根目錄 `.agents/rules/04-homework-documentation.md` 的作業文件規則撰寫；HW3 格式待老師公布，公布後再調整。
 4. PDF 不提交到 git（`.gitignore` 已忽略 `*.pdf`）。
 
 ---
 
 ## 六、Skills
 
-專案專用的 skills 放在 `.agents/skills/<skill 名稱>/SKILL.md`，寫法見 `.agents/skills/README.md`。課程層級的 skills（課程根目錄 `.agents/skills/`）仍可使用，例如 `task-abstraction`、`d3-chart-builder`。
+專案專用的 skills 放在 `.claude/skills/<skill 名稱>/SKILL.md`，寫法見 `.claude/skills/README.md`。

@@ -1,19 +1,21 @@
 # HW03 專案 Skills
 
-這個資料夾放**只給 hw03 使用**的 skills。課程共用的 skills 在課程根目錄的 `.agents/skills/`（hw03 往上兩層），不需要複製過來。
+這個資料夾放**只給 hw03 使用**的 Claude skills，Claude Code 會自動載入。
+
+課程根目錄（hw03 往上兩層）的 `.agents/skills/` 是另一套工具的 skills，Claude 不會自動讀取；需要的話可以參考內容另外改寫到這裡。
 
 ## 新增一個 skill
 
 每個 skill 一個資料夾，裡面放 `SKILL.md`：
 
 ```
-.agents/skills/
+.claude/skills/
 └── <skill 名稱>/          # 小寫英文與連字號，例如 step-commit
     ├── SKILL.md            # 必要
     └── （需要的參考檔或腳本）
 ```
 
-`SKILL.md` 開頭要有 frontmatter，格式與課程層級的 skills 相同：
+`SKILL.md` 開頭要有 frontmatter，`name` 與資料夾名稱相同，`description` 寫清楚何時使用（Claude 依此判斷要不要載入）：
 
 ```markdown
 ---
@@ -31,7 +33,7 @@ description: >-
 
 ## 撰寫原則
 
-- 內容必須符合 `../rules/00-hw03-project-rules.md`（資料鐵律、工作流程等）。
+- 內容必須符合專案根目錄的 `CLAUDE.md`（資料鐵律、工作流程等）。
 - 只寫可重複使用的流程，一次性的操作不需要做成 skill。
 - 涉及數字時，指向 `data/csv/` 與 `npm run check`，不要把數字寫死在 skill 裡。
 
