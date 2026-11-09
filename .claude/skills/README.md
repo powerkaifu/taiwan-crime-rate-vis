@@ -53,4 +53,4 @@ description: >-
 | `/imagegen-frontend-web` | leonxlnx/taste-skill | 網頁設計參考圖生成 |
 | `/imagegen-frontend-mobile` | leonxlnx/taste-skill | 行動 App 設計參考圖生成 |
 
-課程 `.agents/skills/` 的原檔仍保留給另一套工具使用；兩邊修改時要記得同步。
+這些 skills 以 hw03 專案使用為準，可依專案需要直接修改，不需要與課程 `.agents/skills/` 的原檔同步。
