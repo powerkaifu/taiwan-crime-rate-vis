@@ -7,14 +7,33 @@ const state = reactive({
   filter: 'all', // 'all' | 'six' | 'nonSix'
   hovered: null, // 縣市 id
   pinned: null, // 縣市 id
+  activeStory: null, // 目前套用的發現卡 id；使用者手動改控制項時清除
 })
 
 export function useViewState() {
   return {
     state: readonly(state),
-    setCrimeType: (t) => (state.crimeType = t),
-    setBarMode: (m) => (state.barMode = m),
-    setFilter: (f) => (state.filter = f),
+    setCrimeType: (t) => {
+      state.crimeType = t
+      state.activeStory = null
+    },
+    setBarMode: (m) => {
+      state.barMode = m
+      state.activeStory = null
+    },
+    setFilter: (f) => {
+      state.filter = f
+      state.activeStory = null
+    },
+    // 發現卡：一次設定案類、排序依據、篩選與鎖定縣市（規格書 §5.2 第 6 點）
+    applyStory: (story) => {
+      state.crimeType = story.crimeType
+      state.barMode = story.barMode
+      state.filter = story.filter
+      state.pinned = story.pinned
+      state.hovered = null
+      state.activeStory = story.id
+    },
     hover: (id) => (state.hovered = id),
     // 再點同一縣市＝取消鎖定
     togglePin: (id) => (state.pinned = state.pinned === id ? null : id),

@@ -4,6 +4,7 @@ import ChartTooltip from './components/ChartTooltip.vue'
 import ControlBar from './components/ControlBar.vue'
 import RankBarChart from './components/RankBarChart.vue'
 import ScatterPlot from './components/ScatterPlot.vue'
+import StoryCards from './components/StoryCards.vue'
 import TileMap from './components/TileMap.vue'
 import { useCrimeData } from './composables/useCrimeData.js'
 import { useViewState } from './composables/useViewState.js'
@@ -25,6 +26,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   <main class="app" @click="onClick">
     <h1>同一份資料，排序差多少？</h1>
     <p class="subtitle">台灣 22 縣市犯罪率與破獲率｜資料：{{ meta.source }}</p>
+    <StoryCards />
     <ControlBar />
     <p class="howto">滑鼠移到縣市上看詳細數字；點一下鎖定，三張圖同步標示，點空白處或按 Esc 取消。</p>
     <div class="charts">
