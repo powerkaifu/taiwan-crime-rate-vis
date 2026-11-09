@@ -61,7 +61,7 @@ const summary = computed(() => (focusId.value ? countySummary(byId.get(focusId.v
         </div>
         <span class="applies">套用到 A、B、C 三張圖</span>
       </div>
-      <p class="status" aria-live="polite">
+      <p class="status live" aria-live="polite">
         <span>{{ status }}</span>
         <span v-if="summary" class="summary">
           <span class="pin-tag">{{ state.pinned ? '已鎖定' : '游標所在' }}</span>
@@ -154,6 +154,23 @@ const summary = computed(() => (focusId.value ? countySummary(byId.get(focusId.v
 }
 .hint {
   color: var(--slate-light);
+}
+/* 懸停時摘要與提示文字互換，這一列固定高度、不換行，避免控制列長高把整頁往下推（畫面抖動） */
+.live {
+  flex-wrap: nowrap;
+  align-items: center;
+  height: 28px;
+  min-height: 28px;
+  line-height: 28px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.live .summary {
+  flex-wrap: nowrap;
+  line-height: 24px;
+}
+.live .summary b {
+  font-size: var(--font-min);
 }
 .summary {
   display: inline-flex;

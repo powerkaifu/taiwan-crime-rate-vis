@@ -14,7 +14,7 @@ const { state, hover, togglePin, setBarMode } = useViewState()
 const svgRef = ref(null)
 const showTable = ref(false)
 const ROW_H = 20 // 第 12 步：壓縮列高，讓 A 與 C 並排時一屏看得完
-const M = { top: 28, right: 290, bottom: 8, left: 76 }
+const M = { top: 28, right: 336, bottom: 8, left: 76 } // 右側要放得下「件數第 17／率第 1 ▲16 件數少」
 const W = 714 // 與右側圖 C 並排：A 卡片 764＋間距 24＋C 卡片 376＝1164
 const H = M.top + counties.length * ROW_H + M.bottom
 const innerW = W - M.left - M.right
@@ -72,7 +72,7 @@ function draw(animate) {
       r.append('line').attr('class', 'ci')
       r.append('text').attr('class', 'ci-arrow').attr('dy', '0.35em').text('▸')
       r.append('text').attr('class', 'val').attr('x', innerW + 12)
-      r.append('text').attr('class', 'rank').attr('x', innerW + 104)
+      r.append('text').attr('class', 'rank').attr('x', innerW + 100)
       return r
     })
 
