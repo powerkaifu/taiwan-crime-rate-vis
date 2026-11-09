@@ -1,8 +1,8 @@
 # HW03 專案規則（CLAUDE.md）
 
-本檔規範 homework/hw03「同一份資料，排序差多少？」專案的資料、程式、文件與工作流程。Claude Code 開啟本專案時會自動讀取本檔。文中的路徑皆相對於 hw03 專案根目錄。
+本檔規範 homework/hw03「同一份資料，排序差多少？」專案。Claude Code 開啟本專案時會自動讀取本檔。文中的路徑皆相對於 hw03 專案根目錄。
 
-課程根目錄（hw03 往上兩層）的 `.agents/rules/` 是另一套工具的課程規則，可作參考；與本檔衝突時以本檔為準。
+課程根目錄（hw03 往上兩層）的 `.agents/` 是另一套工具的設定，可作參考；與本專案 `.claude/` 衝突時以本專案為準。
 
 ---
 
@@ -19,52 +19,27 @@
 
 ---
 
-## 二、資料鐵律
+## 二、.claude 設定一覽
 
-1. **數字一律從 `data/csv/` 計算**，不可從發想書、簡報或記憶抄寫。程式中的數字由 `src/utils/crimeModel.js` 算出，文案中的數字也要由資料計算（參考 `StoryCards.vue`）。
-2. **只談資料裡有的犯罪類型**：全般刑案、暴力犯罪（故意殺人、擄人勒贖、強盜、搶奪、重傷害、恐嚇取財、強制性交）、竊盜（重大、普通、汽車、機車）。不寫資料以外的類型（如詐欺、毒品、兒虐），也不用與資料無關的時事類比。
-3. **不寫未經驗證的原因**：例如「觀光人口造成」「因為詐欺增加」。只能寫資料顯示什麼，不寫因果。
-4. **統計陷阱一定要處理**：破獲率可能超過 100%（含往年積案）；2024 年 9 月統計改制，只比 2025 單年；暴力犯罪件數少，要標件數與 95% 信賴區間；人口一律稱「推估人口」。
-5. **名次與中位數永遠以全國 22 縣市計算**，篩選不重算。
-6. 修改資料處理後必須執行 `npm run check`，28 項驗收全部通過才算完成。新增衍生數字時，要在 `scripts/check-data.mjs` 加上對應的驗收項目。
+| 位置 | 作用 | 何時生效 |
+| :-- | :-- | :-- |
+| `.claude/rules/data-rules.md` | 資料鐵律 | 每次啟動都載入 |
+| `.claude/rules/vue-d3.md` | 技術與程式規則 | 讀取 `src/`、`scripts/` 等程式檔時 |
+| `.claude/rules/docs-writing.md` | 文件撰寫規則 | 讀取 `README.md`、`docs/` 時 |
+| `.claude/settings.json` | 權限（允許 npm 與 git 指令；禁止改 `data/csv`、`data/raw`、禁止 `git push`）與 hook | 每次啟動 |
+| `.claude/hooks/check-on-data-edit.mjs` | Claude 修改資料處理相關檔案後，自動執行 `npm run check`；失敗時把結果回報給 Claude | 每次 Edit／Write 之後 |
+| `.claude/skills/step-done/` | `/step-done <步驟>`：步驟完成時的檢查、截圖、更新文件、commit 流程 | 使用者輸入指令時 |
+| `.claude/agents/vis-reviewer.md` | 視覺化審查員：依資料鐵律與 Munzner 原則唯讀審查 | 需要審查時由 Claude 委派，或使用者指名 |
 
----
-
-## 三、技術與程式
-
-1. 技術棧固定為 **Vite 6＋Vue 3（`<script setup>`）＋D3 v7**，新增任何套件前要先問使用者。
-2. 資料以 Vite `?raw` 直接匯入 `data/csv/`，不另外複製到 `public/`，也不產生中間 JSON。
-3. 三張圖的共用狀態只放在 `src/composables/useViewState.js`，元件之間不直接互相呼叫。
-4. D3 只負責繪圖與轉場；懸停時不要對 SVG 元素 `raise()`（會觸發 mouseleave 造成閃爍）。
-5. 介面字級最小 14px；顏色要色盲友善，且不能只靠顏色傳達意義；象限、分區不貼「模範區」「警示區」等價值標籤。
-6. `node_modules` 由使用者在 Windows 執行 `npm install` 產生，不在 Linux 環境安裝到專案資料夾。
-7. `vite.config.js` 的 `base` 維持 `'./'`；不要設定 `build.emptyOutDir: false`。
+個人專用的設定放 `.claude/settings.local.json` 或專案根目錄的 `CLAUDE.local.md`，兩者都不提交到 git。
 
 ---
 
-## 四、工作流程
+## 三、工作流程
 
 1. **一次只做一個步驟**，完成後停下來回報，等使用者批准再繼續。不要主動擴大範圍或產出使用者沒要求的文件。
-2. 每完成一個步驟：
-   - `npm run check` 與 `npm run build` 都通過，瀏覽器測試主控台無錯誤；
-   - 截圖存到 `docs/screenshots/`，檔名 `step<步驟>-<圖表>-<案類>-<模式>.png`；
-   - 更新規格書對應步驟（標 ✅ 與日期）、勾選待辦備忘錄；
-   - **git commit**，作者 `KaiFu <powerkaifu@gmail.com>`，訊息用繁體中文、`類型: 摘要` 格式，只加入本步驟的檔案。
+2. 每完成一個步驟，照 `/step-done` 的流程：檢查 → 截圖 → 更新規格書與待辦 → git commit（作者 `KaiFu <powerkaifu@gmail.com>`，繁體中文、`類型: 摘要` 格式，只加入本步驟的檔案）。
 3. `data/csv/` 若在 git 顯示「已修改」，多半只是換行符號差異，不要提交。
 4. 刪除檔案前要先徵得使用者同意；改名、搬移用 `mv -n`，不可覆蓋既有檔案。
 5. GitHub 遠端由使用者自行設定，不要自行新增 remote 或 push。
-
----
-
-## 五、文件與溝通
-
-1. 一律使用繁體中文；說明簡潔，先講結論。
-2. 外部資料（新聞、文獻）要附來源網址；無法讀取或無法驗證的內容要明說，不可推測後當成事實。
-3. README 參考課程根目錄 `.agents/rules/04-homework-documentation.md` 的作業文件規則撰寫；HW3 格式待老師公布，公布後再調整。
-4. PDF 不提交到 git（`.gitignore` 已忽略 `*.pdf`）。
-
----
-
-## 六、Skills
-
-專案專用的 skills 放在 `.claude/skills/<skill 名稱>/SKILL.md`，寫法見 `.claude/skills/README.md`。
+6. 一律使用繁體中文；說明簡潔，先講結論。
