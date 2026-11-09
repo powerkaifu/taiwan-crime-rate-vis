@@ -1,12 +1,16 @@
 <script setup>
 // 圖表 A：排名橫條圖（規格書 §4.2、§4.3）
 // 件數 ⇄ 每十萬人犯罪率切換時，長度補間、縣市以 Y 位置轉場重排。
+// 第 13 步：犯罪率模式右側寫「~~件數名次~~ → 犯罪率名次」（更正單的記憶點）；件數灰／率青橫條；
+// 選取用螢光黃底色帶；未選取時只淡化橫條，文字保持可讀；件數少或名次只差 ±2 的變化用淡色。
 import * as d3 from 'd3'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useCrimeData } from '../composables/useCrimeData.js'
 import { emphasis, useViewState } from '../composables/useViewState.js'
-import { headlineA } from '../utils/headlines.js'
 import { CARD_CHROME, GRID_GAP, useLayoutWidth } from '../composables/useLayoutWidth.js'
+import { fmtCount, fmtRate } from '../utils/format.js'
+import { headlineA } from '../utils/headlines.js'
+import { dur } from '../utils/motion.js'
 import { TILE_CARD_W } from '../utils/tileLayout.js'
 import ChartDataTable from './ChartDataTable.vue'
 
@@ -15,28 +19,34 @@ const { state, hover, togglePin, setBarMode } = useViewState()
 
 const svgRef = ref(null)
 const showTable = ref(false)
-const ROW_H = 20 // 第 12 步：壓縮列高，讓 A 與 C 並排時一屏看得完
-const M = { top: 28, right: 336, bottom: 8, left: 76 } // 右側要放得下「件數第 17／率第 1 ▲16 件數少」
+const ROW_H = 20
+const M = { top: 40, right: 300, bottom: 8, left: 76 }
 // 寬度＝內容區 − 間距 − 圖 B 卡片 − 本卡片內距與邊框
 const contentW = useLayoutWidth()
 const W = computed(() => contentW.value - GRID_GAP - TILE_CARD_W - CARD_CHROME)
 const H = M.top + counties.length * ROW_H + M.bottom
 const DURATION = 750
+const VAL_DX = 24 // 數值欄距離軸線右端
+const RANK_DX = 112 // 名次欄距離軸線右端
 
-const typeLabel = computed(() => ({ 全般: '全般刑案', 暴力: '暴力犯罪', 竊盜: '竊盜' })[state.crimeType])
+const TYPE = { 全般: '全般刑案', 暴力: '暴力犯罪', 竊盜: '竊盜' }
+const typeLabel = computed(() => TYPE[state.crimeType])
 // 暴力犯罪的犯罪率模式才畫 95% 區間（規格書 §4.2）
 const showCI = computed(() => state.crimeType === '暴力' && state.barMode === 'rate')
+const isViolent = computed(() => state.crimeType === '暴力')
 
 const value = (c) => (state.barMode === 'count' ? c[state.crimeType].count : c[state.crimeType].rate)
-const headline = computed(() => headlineA(counties, state.crimeType, state.barMode))
+const headline = computed(() => headlineA(counties, state.crimeType, state.barMode, state.filter))
 const MODES = [
   { key: 'rate', label: '每十萬人犯罪率' },
   { key: 'count', label: '發生件數' },
 ]
 
-const fmtValue = (v) => (state.barMode === 'count' ? `${d3.format(',')(v)} 件` : d3.format(',.2f')(v))
+const fmtValue = (v) => (state.barMode === 'count' ? `${fmtCount(v)} 件` : fmtRate(v, state.crimeType))
+/** 名次變化是否「小」：件數少（暴力犯罪）或只差 2 名以內，用淡色、不加粗 */
+const isMinor = (r, type) => Math.abs(r.rankDelta) <= 2 || (type === '暴力' && r.smallN)
 
-let g, axisG, x
+let g, axisG, headG, x
 
 function draw(animate) {
   const type = state.crimeType
@@ -57,11 +67,25 @@ function draw(animate) {
   x.domain([0, maxV || 1]).nice()
   const clipped = (d) => showCI.value && d[type].ciHigh > x.domain()[1]
 
-  const t = d3.transition().duration(animate ? DURATION : 0).ease(d3.easeCubicOut)
+  const t = d3.transition().duration(animate ? dur(DURATION) : 0).ease(d3.easeCubicOut)
 
+  g.classed('mode-count', state.barMode === 'count').classed('mode-rate', state.barMode === 'rate')
   axisG
     .transition(t)
-    .call(d3.axisTop(x).ticks(Math.max(3, Math.floor(innerW / 90))).tickSizeOuter(0).tickFormat(state.barMode === 'count' ? d3.format('~s') : d3.format(',')))
+    .call(
+      d3
+        .axisTop(x)
+        .ticks(Math.max(3, Math.floor(innerW / 90)))
+        .tickSizeOuter(0)
+        .tickFormat(state.barMode === 'count' ? d3.format('~s') : d3.format(',')),
+    )
+
+  // 右側兩欄的欄名
+  headG.select('text.h-val').attr('x', innerW + VAL_DX).text(state.barMode === 'count' ? '發生件數' : '每十萬人')
+  headG
+    .select('text.h-rank')
+    .attr('x', innerW + RANK_DX)
+    .text(state.barMode === 'count' ? '件數名次（犯罪率名次）' : '件數名次 → 犯罪率名次')
 
   const rows = g
     .selectAll('g.row')
@@ -70,8 +94,10 @@ function draw(animate) {
       const r = enter
         .append('g')
         .attr('class', 'row')
+        .attr('tabindex', 0)
+        .attr('role', 'button')
         .attr('transform', (d) => `translate(0,${y(d.id)})`)
-      r.append('rect').attr('class', 'hit').attr('x', -M.left).attr('fill', 'transparent')
+      r.append('rect').attr('class', 'band').attr('x', -M.left)
       r.append('text').attr('class', 'name').attr('x', -10).attr('text-anchor', 'end')
       r.append('rect').attr('class', 'bar').attr('width', 0).attr('rx', 2)
       r.append('line').attr('class', 'ci')
@@ -85,10 +111,23 @@ function draw(animate) {
     .on('mouseenter', (_, d) => hover(d.id))
     .on('mouseleave', () => hover(null))
     .on('click', (_, d) => togglePin(d.id))
+    // 鍵盤：Tab 移到縣市＝懸停，Enter／空白鍵＝鎖定
+    .on('focus', (_, d) => hover(d.id))
+    .on('blur', () => hover(null))
+    .on('keydown', (e, d) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        togglePin(d.id)
+      }
+    })
+    .attr('aria-label', (d) => {
+      const r = d[type]
+      return `${d.id}：犯罪率 ${fmtRate(r.rate, type)}（第 ${r.rankRate}），件數 ${fmtCount(r.count)}（第 ${r.rankCount}）`
+    })
 
   const mid = y.bandwidth() / 2
   rows.transition(t).attr('transform', (d) => `translate(0,${y(d.id)})`)
-  rows.select('rect.hit').attr('width', W.value).attr('y', -(ROW_H - y.bandwidth()) / 2).attr('height', ROW_H)
+  rows.select('rect.band').attr('width', W.value).attr('y', -(ROW_H - y.bandwidth()) / 2).attr('height', ROW_H)
   rows
     .select('text.name')
     .attr('y', mid)
@@ -106,53 +145,73 @@ function draw(animate) {
     .transition(t)
     .attr('x1', (d) => x(showCI.value ? d[type].ciLow : 0))
     .attr('x2', (d) => x(showCI.value ? Math.min(d[type].ciHigh, x.domain()[1]) : 0))
-    .attr('opacity', showCI.value ? 1 : 0)
+    .style('display', showCI.value ? null : 'none')
   rows
     .select('text.ci-arrow')
     .attr('x', innerW - 4)
     .attr('y', mid)
-    .attr('opacity', (d) => (clipped(d) ? 1 : 0))
+    .style('display', (d) => (clipped(d) ? null : 'none'))
   rows
     .select('text.val')
-    .attr('x', innerW + 12)
+    .attr('x', innerW + VAL_DX)
     .attr('y', mid)
     .attr('dy', '0.35em')
     .text((d) => fmtValue(value(d)) + (state.barMode === 'rate' && d[type].count === 0 ? '（0 件）' : ''))
   rows
     .select('text.rank')
-    .attr('x', innerW + 100)
+    .attr('x', innerW + RANK_DX)
     .attr('y', mid)
     .attr('dy', '0.35em')
     .each(function (d) {
       const r = d[type]
       const el = d3.select(this)
       el.selectAll('tspan').remove()
-      el.append('tspan').text(`件數第 ${r.rankCount}／率第 ${r.rankRate}`)
-      // 名次變動：件數名次 − 率名次；正值＝換算犯罪率後名次上升
+      if (state.barMode === 'rate') {
+        // 更正單：舊名次（件數）畫刪除線 → 新名次（犯罪率）
+        if (r.rankDelta !== 0) {
+          el.append('tspan').attr('class', 'old').text(r.rankCount)
+          el.append('tspan').attr('class', 'arrow').text(' → ')
+        }
+        el.append('tspan').attr('class', 'new').text(r.rankRate)
+      } else {
+        el.append('tspan').attr('class', 'new').text(r.rankCount)
+        el.append('tspan').attr('class', 'aux').text(`（${r.rankRate}）`)
+      }
+      // 名次變動：件數名次 − 率名次；正值＝換算犯罪率後名次往前
       if (r.rankDelta !== 0) {
         el.append('tspan')
-          .attr('class', r.rankDelta > 0 ? 'up' : 'down')
-          .attr('dx', 6)
+          .attr('class', `delta ${isMinor(r, type) ? 'minor' : 'major'}`)
+          .attr('dx', 8)
           .text(`${r.rankDelta > 0 ? '▲' : '▼'}${Math.abs(r.rankDelta)}`)
       }
-      if (type === '暴力' && r.smallN) el.append('tspan').attr('class', 'small').attr('dx', 6).text('件數少')
+      if (type === '暴力' && r.smallN) el.append('tspan').attr('class', 'small').attr('dx', 8).text('件數少')
     })
 
   updateEmphasis(animate)
 }
 
+/** 淡化只作用在橫條與區間線；文字保持可讀（篩選掉的縣市文字仍較淡） */
 function updateEmphasis(animate = true) {
-  g.selectAll('g.row')
-    .transition('emphasis')
-    .duration(animate ? 150 : 0)
-    .attr('opacity', (d) => emphasis(d, state))
-  g.selectAll('g.row').classed('focused', (d) => d.id === (state.pinned ?? state.hovered))
+  const d150 = animate ? dur(150) : 0
+  const rows = g.selectAll('g.row')
+  rows.classed('focused', (d) => d.id === (state.pinned ?? state.hovered))
+  rows.classed('pinned', (d) => d.id === state.pinned)
+  rows.selectAll('rect.bar, line.ci, text.ci-arrow').transition('emphasis').duration(d150).attr('opacity', function () {
+    return emphasis(d3.select(this.parentNode).datum(), state)
+  })
+  rows.selectAll('text.name, text.val, text.rank').transition('emphasis').duration(d150).attr('opacity', function () {
+    const e = emphasis(d3.select(this.parentNode).datum(), state)
+    return e === 1 ? 1 : e <= 0.15 ? 0.45 : 0.75
+  })
 }
 
 onMounted(() => {
   const svg = d3.select(svgRef.value)
   g = svg.append('g').attr('transform', `translate(${M.left},${M.top})`)
   axisG = g.append('g').attr('class', 'axis')
+  headG = g.append('g').attr('class', 'col-head').attr('transform', 'translate(0,-12)')
+  headG.append('text').attr('class', 'h-val')
+  headG.append('text').attr('class', 'h-rank')
   x = d3.scaleLinear()
   draw(false)
 })
@@ -164,31 +223,37 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
 
 <template>
   <section class="chart-card">
-    <p class="kicker">A 排名橫條圖・{{ typeLabel }}</p>
-    <h2>{{ headline }}</h2>
-    <div class="chart-header">
-      <div class="sort" role="group" aria-label="圖 A 排序依據">
-        <span class="label">排序依據</span>
-        <div class="segmented">
-          <button
-            v-for="o in MODES"
-            :key="o.key"
-            :class="{ active: state.barMode === o.key }"
-            :aria-pressed="state.barMode === o.key"
-            @click="setBarMode(o.key)"
-          >
-            {{ o.label }}
-          </button>
-        </div>
+    <div class="head">
+      <div>
+        <p class="kicker">A 排名橫條圖・{{ typeLabel }}</p>
+        <h2>{{ headline }}</h2>
       </div>
       <button class="table-btn" :aria-pressed="showTable" @click="showTable = !showTable">{{ showTable ? '顯示圖表' : '資料表' }}</button>
     </div>
-    <p class="caption">
-      右側為全國名次，▲▼ 為換算犯罪率後的名次變化。
-      <span v-if="showCI">細線為 95% 信賴區間，▸ 表示區間超出座標範圍。</span>
-    </p>
+    <div class="sort" role="group" aria-label="圖 A 排序依據（只影響這張圖）">
+      <span class="label">排序依據</span>
+      <div class="segmented">
+        <button
+          v-for="o in MODES"
+          :key="o.key"
+          :class="{ active: state.barMode === o.key }"
+          :aria-pressed="state.barMode === o.key"
+          @click="setBarMode(o.key)"
+        >
+          {{ o.label }}
+        </button>
+      </div>
+      <span class="only">只影響這張圖</span>
+    </div>
     <ChartDataTable v-if="showTable" kind="A" />
-    <svg v-show="!showTable" ref="svgRef" :viewBox="`0 0 ${W} ${H}`" :width="W" :height="H" role="img" :aria-label="`${typeLabel}各縣市排名橫條圖`" />
+    <svg v-show="!showTable" ref="svgRef" :viewBox="`0 0 ${W} ${H}`" :width="W" :height="H" role="group" :aria-label="`${typeLabel}各縣市排名橫條圖，可用 Tab 鍵逐一瀏覽縣市`" />
+    <ul v-show="!showTable" class="notes">
+      <li v-if="state.barMode === 'rate'">刪除線是件數名次，箭頭後是換算每十萬人犯罪率後的名次；▲▼ 為名次往前或往後幾名。</li>
+      <li v-else>括號內是換算每十萬人犯罪率後的名次；▲▼ 為換算後名次往前或往後幾名。</li>
+      <li>名次只差 2 名以內{{ isViolent ? '，或件數少於 30' : '' }}時，▲▼ 以淡色顯示：差距小，不宜過度解讀。</li>
+      <li v-if="showCI">細線為犯罪率的 95% 信賴區間；▸ 表示區間超出座標範圍。</li>
+      <li v-if="isViolent">「件數少」：件數少於 30，犯罪率容易因少數案件大幅變動。</li>
+    </ul>
   </section>
 </template>
 
@@ -214,9 +279,10 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
 h2 {
   font-size: 20px;
   line-height: 1.4;
-  margin: 2px 0 10px;
+  margin: 2px 0 0;
 }
 .sort {
+  margin: 10px 0 6px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -252,6 +318,13 @@ h2 {
   background: var(--ink);
   color: var(--paper);
 }
+/* 鍵盤焦點：內側墨色框＋白色細縫，未選取（白底）與已選取（墨底）都看得見 */
+.segmented button:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 0 0 2px var(--ink),
+    inset 0 0 0 4px var(--sheet);
+}
 .caption {
   color: var(--color-ink-soft);
   font-size: var(--font-min);
@@ -273,7 +346,7 @@ h2 {
 .head {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
 }
 .head-right {
@@ -298,35 +371,80 @@ svg :deep(.axis line) {
 }
 svg :deep(.row) {
   cursor: pointer;
+  outline: none;
+}
+/* 選取（懸停、鍵盤焦點、鎖定）：螢光黃底色帶，文字仍是墨色 */
+svg :deep(.band) {
+  fill: var(--mark);
+  opacity: 0;
+}
+svg :deep(.row.focused .band) {
+  opacity: 0.55;
+}
+svg :deep(.row.pinned .band) {
+  opacity: 1;
+}
+svg :deep(.row:focus-visible .band) {
+  opacity: 1;
+  stroke: var(--ink);
+  stroke-width: 1.5;
 }
 svg :deep(.bar) {
-  fill: var(--color-accent);
+  fill: var(--rate);
+  transition: fill 0.4s;
 }
-svg :deep(.row.focused .bar) {
-  fill: var(--color-accent-2);
+svg :deep(.mode-count .bar) {
+  fill: var(--count);
+}
+svg :deep(.row.focused .name) {
+  font-weight: 700;
 }
 svg :deep(.ci) {
-  stroke: var(--color-ink);
+  stroke: var(--ink);
   stroke-width: 1.5;
 }
 svg :deep(.ci-arrow) {
-  fill: var(--color-ink);
+  fill: var(--ink);
 }
 svg :deep(.val) {
   font-variant-numeric: tabular-nums;
 }
+svg :deep(.col-head text) {
+  fill: var(--slate-light);
+}
 svg :deep(.rank) {
-  fill: var(--color-ink-soft);
+  fill: var(--ink);
 }
-svg :deep(.rank .up) {
-  fill: #b8641e;
+svg :deep(.rank .old) {
+  fill: var(--slate-light);
+  text-decoration: line-through;
+}
+svg :deep(.rank .arrow),
+svg :deep(.rank .aux) {
+  fill: var(--slate-light);
+}
+svg :deep(.rank .new) {
   font-weight: 700;
 }
-svg :deep(.rank .down) {
-  fill: var(--color-accent);
+svg :deep(.rank .delta.major) {
+  fill: var(--ink);
   font-weight: 700;
+}
+svg :deep(.rank .delta.minor) {
+  fill: var(--slate-light);
 }
 svg :deep(.rank .small) {
-  fill: var(--color-muted);
+  fill: var(--slate-light);
+}
+.notes {
+  margin: 12px 0 0;
+  padding: 0 0 0 1.2em;
+  font-size: var(--font-min);
+  color: var(--slate-light);
+  line-height: 1.6;
+}
+.only {
+  font-size: var(--font-min);
+  color: var(--slate-light);
 }
 </style>

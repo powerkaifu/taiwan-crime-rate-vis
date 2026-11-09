@@ -85,6 +85,7 @@ function choose(story) {
     >
       <span class="title">{{ s.title }}</span>
       <span class="body">{{ s.body }}</span>
+      <span class="go">套用並捲到圖 {{ s.target === '.chart-a' ? 'A' : s.target === '.chart-b' ? 'B' : 'C' }}</span>
     </button>
   </section>
 </template>
@@ -139,5 +140,19 @@ function choose(story) {
 }
 .story.active .body {
   color: #c9d4d6;
+}
+/* 可點提示（審查意見：故事卡看起來不像能點） */
+.go {
+  margin-top: auto;
+  padding-top: 4px;
+  font-size: var(--font-min);
+  font-weight: 500;
+  color: var(--rate);
+}
+.story:hover .go {
+  text-decoration: underline;
+}
+.story.active .go {
+  color: var(--mark);
 }
 </style>

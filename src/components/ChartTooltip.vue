@@ -4,6 +4,7 @@ import * as d3 from 'd3'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useCrimeData } from '../composables/useCrimeData.js'
 import { useViewState } from '../composables/useViewState.js'
+import { fmtPct, fmtRate } from '../utils/format.js'
 
 const { counties, meta } = useCrimeData()
 const { state } = useViewState()
@@ -23,9 +24,9 @@ onBeforeUnmount(() => window.removeEventListener('mousemove', onMove))
 const county = computed(() => (state.hovered ? byId.get(state.hovered) : null))
 const typeLabel = computed(() => ({ 全般: '全般刑案', 暴力: '暴力犯罪', 竊盜: '竊盜' })[state.crimeType])
 const d = computed(() => county.value?.[state.crimeType])
-const rateFmt = (v) => d3.format(',.2f')(v)
+const rateFmt = (v) => fmtRate(v, state.crimeType)
 const popText = computed(() => `約 ${d3.format(',.1f')(county.value.pop / 1e4)} 萬`)
-const medianClr = computed(() => d3.format('.2~f')(meta.types[state.crimeType].medianClearance))
+const medianClr = computed(() => fmtPct(meta.types[state.crimeType].medianClearance))
 </script>
 
 <template>
@@ -49,7 +50,7 @@ const medianClr = computed(() => d3.format('.2~f')(meta.types[state.crimeType].m
       <dt>發生件數</dt>
       <dd>{{ d3.format(',')(d.count) }} 件（全國第 {{ d.rankCount }}）</dd>
       <dt>破獲率</dt>
-      <dd>{{ d.clearance === null ? '—（無案件）' : `${d.clearance}%` }}（中位數 {{ medianClr }}%）</dd>
+      <dd>{{ d.clearance === null ? '—（無案件）' : fmtPct(d.clearance) }}（中位數 {{ medianClr }}）</dd>
       <dt>推估人口</dt>
       <dd>{{ popText }}</dd>
     </dl>

@@ -169,9 +169,12 @@ onBeforeUnmount(() => {
   background: var(--ink);
   color: var(--paper);
 }
+/* 鍵盤焦點：內側墨色框＋白色細縫，未選取（白底）與已選取（墨底）都看得見 */
 .segmented button:focus-visible {
-  outline-offset: -3px;
-  outline-color: var(--mark);
+  outline: none;
+  box-shadow:
+    inset 0 0 0 2px var(--ink),
+    inset 0 0 0 4px var(--sheet);
 }
 .status {
   margin: 18px 0 0;

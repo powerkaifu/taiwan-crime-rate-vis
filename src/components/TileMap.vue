@@ -5,7 +5,9 @@ import * as d3 from 'd3'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useCrimeData } from '../composables/useCrimeData.js'
 import { emphasis, useViewState } from '../composables/useViewState.js'
+import { fmtRate as fmtRateT } from '../utils/format.js'
 import { headlineTile } from '../utils/headlines.js'
+import { dur } from '../utils/motion.js'
 import ChartDataTable from './ChartDataTable.vue'
 import { TILE_CELL as CELL, TILE_COLS, TILE_GAP as GAP, TILE_LAYOUT, TILE_ROWS } from '../utils/tileLayout.js'
 
@@ -21,7 +23,7 @@ const W = M.left + TILE_COLS * CELL + (TILE_COLS - 1) * GAP + ISLAND_GAP + M.rig
 const H = M.top + TILE_ROWS * CELL + (TILE_ROWS - 1) * GAP + M.bottom
 const DURATION = 750
 
-const headline = computed(() => headlineTile(counties, state.crimeType))
+const headline = computed(() => headlineTile(counties, state.crimeType, state.filter))
 const typeLabel = computed(() => ({ 全般: '全般刑案', 暴力: '暴力犯罪', 竊盜: '竊盜' })[state.crimeType])
 const isViolent = computed(() => state.crimeType === '暴力')
 
@@ -30,12 +32,12 @@ const tiles = TILE_LAYOUT.map((t) => ({ ...t, county: byId.get(t.id) }))
 const cellX = (col) => M.left + col * (CELL + GAP) + (col > 0 ? ISLAND_GAP : 0)
 const cellY = (row) => M.top + row * (CELL + GAP)
 
-// 色階只用藍色系的中段到深段，最淺的格子仍看得見（禁用彩虹色）
-const T0 = 0.12
-const T1 = 0.9
-const color = d3.scaleSequential((t) => d3.interpolateBlues(T0 + (T1 - T0) * t))
+// 第 13 步：率青單一色相明度色階（與圖 A 犯罪率橫條同色，代表同一個量）；禁用彩虹色
+const RAMP = ['#E3EEEF', '#0E6F7A']
+const color = d3.scaleSequential(d3.interpolateLab(...RAMP))
+const STEPS = 5
 const legend = ref({ min: '', max: '', stops: [] })
-const fmtRate = (v) => (state.crimeType === '暴力' ? d3.format(',.2f')(v) : d3.format(',.0f')(v))
+const fmtRate = (v) => fmtRateT(v, state.crimeType)
 
 let g
 
@@ -46,9 +48,10 @@ function draw(animate) {
   legend.value = {
     min: fmtRate(d3.min(rates)),
     max: fmtRate(d3.max(rates)),
-    stops: d3.range(0, 1.01, 0.25).map((t) => d3.interpolateBlues(T0 + (T1 - T0) * t)),
+    // 分段圖例：5 段，每段取該區間中點的顏色
+    stops: d3.range(STEPS).map((i) => d3.interpolateLab(...RAMP)((i + 0.5) / STEPS)),
   }
-  const t = d3.transition().duration(animate ? DURATION : 0).ease(d3.easeCubicOut)
+  const t = d3.transition().duration(animate ? dur(DURATION) : 0).ease(d3.easeCubicOut)
 
   const cells = g.selectAll('g.tile')
   // 斜線圖樣（url）無法做顏色補間：0 件與從 0 件換回來的格子直接設定，其餘才做轉場
@@ -73,19 +76,32 @@ function draw(animate) {
   updateEmphasis(animate)
 }
 
-/** 色階後段（較深）改用白字 */
+/** 依 WCAG 對比度選字色：白字與墨字（#1C2A2E）哪個對比高就用哪個 */
+const lum = (c) => {
+  const { r, g, b } = d3.rgb(c)
+  const f = (v) => ((v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b)
+}
+const contrast = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
+const L_WHITE = 1
+const L_INK = lum('#1C2A2E')
 function isDark(rate) {
-  const [lo, hi] = color.domain()
-  return (rate - lo) / (hi - lo || 1) > 0.5
+  const L = lum(color(rate))
+  return contrast(L, L_WHITE) > contrast(L, L_INK)
 }
 
+/** 未選取的格子變淡，但格內文字仍要讀得到，所以不低於 0.4 */
 function updateEmphasis(animate = true) {
   const focus = state.pinned ?? state.hovered
   g.selectAll('g.tile')
     .classed('focused', (d) => d.id === focus)
+    .classed('pinned', (d) => d.id === state.pinned)
     .transition('emphasis')
-    .duration(animate ? 150 : 0)
-    .attr('opacity', (d) => emphasis(d.county, state))
+    .duration(animate ? dur(150) : 0)
+    .attr('opacity', (d) => {
+      const e = emphasis(d.county, state)
+      return e === 1 ? 1 : e <= 0.15 ? 0.3 : 0.45
+    })
 }
 
 onMounted(() => {
@@ -99,8 +115,8 @@ onMounted(() => {
     .attr('height', 8)
     .attr('patternUnits', 'userSpaceOnUse')
     .attr('patternTransform', 'rotate(45)')
-  zero.append('rect').attr('width', 8).attr('height', 8).attr('fill', '#eef1f4')
-  zero.append('line').attr('x1', 0).attr('y1', 0).attr('x2', 0).attr('y2', 8).attr('stroke', '#a3acb8').attr('stroke-width', 2)
+  zero.append('rect').attr('width', 8).attr('height', 8).attr('fill', '#E3E9E8')
+  zero.append('line').attr('x1', 0).attr('y1', 0).attr('x2', 0).attr('y2', 8).attr('stroke', '#9AA7AB').attr('stroke-width', 2)
   // 件數少：透明底加白色細斜線，疊在顏色上
   const small = defs
     .append('pattern')
@@ -126,6 +142,20 @@ onMounted(() => {
     .on('mouseenter', (_, d) => hover(d.id))
     .on('mouseleave', () => hover(null))
     .on('click', (_, d) => togglePin(d.id))
+    // 鍵盤：Tab 移到格子＝懸停，Enter／空白鍵＝鎖定
+    .attr('tabindex', 0)
+    .attr('role', 'button')
+    .attr('aria-label', (d) => d.id)
+    .on('focus', (_, d) => hover(d.id))
+    .on('blur', () => hover(null))
+    .on('keydown', (e, d) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        togglePin(d.id)
+      }
+    })
+  // 選取時的螢光黃外框（畫在格子後面，往外多 4px）
+  cells.append('rect').attr('class', 'halo').attr('x', -4).attr('y', -4).attr('width', CELL + 8).attr('height', CELL + 8).attr('rx', 9)
   cells.append('rect').attr('class', 'fill').attr('width', CELL).attr('height', CELL).attr('rx', 6)
   cells.append('rect').attr('class', 'small').attr('width', CELL).attr('height', CELL).attr('rx', 6).attr('fill', 'url(#hatch-small)').attr('opacity', 0)
   cells.append('rect').attr('class', 'outline').attr('width', CELL).attr('height', CELL).attr('rx', 6)
@@ -159,11 +189,11 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
     <svg v-show="!showTable" ref="svgRef" :viewBox="`0 0 ${W} ${H}`" :width="W" :height="H" role="img" :aria-label="`${typeLabel}各縣市犯罪率等積方塊地圖`" />
     <div v-show="!showTable" class="legend" aria-hidden="true">
       <span>{{ legend.min }}</span>
-      <span class="ramp" :style="{ background: `linear-gradient(to right, ${legend.stops.join(',')})` }" />
+      <span class="steps"><span v-for="c in legend.stops" :key="c" class="step" :style="{ background: c }" /></span>
       <span>{{ legend.max }}</span>
       <span class="unit">（每十萬人）</span>
     </div>
-    <p v-if="isViolent" class="note">斜線格：件數少於 30，犯罪率不穩定；灰色斜線：本年 0 件。</p>
+    <p v-if="isViolent" class="note">白色細斜線：件數少於 30，犯罪率容易因少數案件大幅變動；灰色斜線：本年 0 件。</p>
   </section>
 </template>
 
@@ -201,11 +231,20 @@ h2 {
   color: var(--color-ink-soft);
   margin-top: 6px;
 }
-.ramp {
+.steps {
+  display: inline-flex;
+  gap: 2px;
+}
+.step {
   display: inline-block;
-  width: 160px;
-  height: 12px;
-  border-radius: 6px;
+  width: 30px;
+  height: 14px;
+}
+.step:first-child {
+  border-radius: 3px 0 0 3px;
+}
+.step:last-child {
+  border-radius: 0 3px 3px 0;
 }
 .unit {
   color: var(--color-muted);
@@ -235,6 +274,20 @@ svg {
 }
 svg :deep(.tile) {
   cursor: pointer;
+  outline: none;
+}
+svg :deep(.halo) {
+  fill: none;
+  stroke: var(--mark);
+  stroke-width: 4;
+  opacity: 0;
+}
+svg :deep(.tile.focused .halo) {
+  opacity: 0.7;
+}
+svg :deep(.tile.pinned .halo),
+svg :deep(.tile:focus-visible .halo) {
+  opacity: 1;
 }
 svg :deep(.outline) {
   fill: none;
@@ -242,7 +295,8 @@ svg :deep(.outline) {
   stroke-width: 3;
 }
 svg :deep(.tile.focused .outline) {
-  stroke: var(--color-accent-2);
+  stroke: var(--ink);
+  stroke-width: 2;
 }
 svg :deep(text) {
   font-size: 14px;
@@ -256,7 +310,7 @@ svg :deep(text.on-dark) {
   fill: #ffffff;
 }
 svg :deep(.island-sep) {
-  stroke: #c9d3de;
+  stroke: var(--line);
   stroke-dasharray: 4 4;
 }
 </style>
