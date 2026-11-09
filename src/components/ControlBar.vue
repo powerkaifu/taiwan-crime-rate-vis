@@ -87,21 +87,21 @@ const summary = computed(() => (focusId.value ? countySummary(byId.get(focusId.v
 .inner {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 14px 48px 10px;
+  padding: 20px 48px 16px; /* 第 12 步：加大留白，控制列不擁擠 */
 }
 .groups {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 28px;
+  gap: 12px 40px;
 }
 .group {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 .label {
-  font-size: 15px;
+  font-size: 16px;
   color: var(--slate);
 }
 .segmented {
@@ -113,8 +113,8 @@ const summary = computed(() => (focusId.value ? countySummary(byId.get(focusId.v
 }
 .segmented button {
   font: inherit;
-  font-size: 15px;
-  padding: 5px 14px;
+  font-size: 16px;
+  padding: 8px 20px;
   border: none;
   border-left: 1px solid var(--line);
   background: transparent;
@@ -136,7 +136,7 @@ const summary = computed(() => (focusId.value ? countySummary(byId.get(focusId.v
   outline-color: var(--mark);
 }
 .status {
-  margin: 8px 0 0;
+  margin: 14px 0 0;
   font-size: var(--font-min);
   color: var(--ink);
 }
