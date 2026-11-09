@@ -90,6 +90,6 @@ h1 {
 .chart-a,
 .chart-b,
 .chart-c {
-  scroll-margin-top: 120px;
+  scroll-margin-top: calc(var(--bar-h, 142px) + 16px); /* --bar-h 由 ControlBar 量測 */
 }
 </style>

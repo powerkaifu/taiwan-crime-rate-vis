@@ -37,20 +37,27 @@ const FILTER = { all: '全部 22 縣市', six: '只看六都', nonSix: '只看�
 const status = computed(() => `目前：${TYPE[state.crimeType]}，${FILTER[state.filter]}。`)
 
 const byId = new Map(counties.map((c) => [c.id, c]))
-const focusId = computed(() => state.pinned ?? state.hovered)
-const summary = computed(() => (focusId.value ? countySummary(byId.get(focusId.value), meta, state.crimeType) : null))
+// 摘要只在「鎖定」時顯示；懸停時已有 Tooltip，不重複（審查意見）
+const summary = computed(() => (state.pinned ? countySummary(byId.get(state.pinned), meta, state.crimeType) : null))
 
-// 往下捲、控制列貼在頂端時才顯示分隔線（停在頁首時不顯示）
+// 往下捲、控制列貼在頂端時：顯示分隔線與陰影，並縮小留白（停在頁首時保持寬鬆）
 const barRef = ref(null)
 const stuck = ref(false)
 function onScroll() {
   stuck.value = !!barRef.value && window.scrollY > 0 && barRef.value.getBoundingClientRect().top <= 0
 }
+// 把控制列高度寫進 CSS 變數 --bar-h，圖表的 scroll-margin-top 依此避開控制列
+let ro
 onMounted(() => {
   window.addEventListener('scroll', onScroll, { passive: true })
   onScroll()
+  ro = new ResizeObserver(() => document.documentElement.style.setProperty('--bar-h', `${barRef.value.offsetHeight}px`))
+  ro.observe(barRef.value)
 })
-onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScroll)
+  ro?.disconnect()
+})
 </script>
 
 <template>
@@ -76,11 +83,11 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
       <p class="status live" aria-live="polite">
         <span>{{ status }}</span>
         <span v-if="summary" class="summary">
-          <span class="pin-tag">{{ state.pinned ? '已鎖定' : '游標所在' }}</span>
+          <span class="pin-tag">已鎖定</span>
           <b>{{ summary[0] }}</b>
           <span v-for="(part, i) in summary.slice(1)" :key="i" class="part">{{ part }}</span>
         </span>
-        <span v-else class="hint">滑鼠移到縣市上，這裡會顯示它的數字；點一下鎖定，點空白處或按 Esc 取消。</span>
+        <span v-else class="hint">滑鼠移到縣市上看數字；點一下鎖定，這裡會顯示它的摘要；點空白處或按 Esc 取消。</span>
       </p>
       <p v-if="state.filter !== 'all'" class="status note">其他縣市變淡但保留；名次與中位數仍以全國 22 縣市計算。</p>
     </div>
@@ -98,6 +105,17 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   margin-bottom: 24px;
 }
 /* 分隔線用 box-shadow，不用 border：出現時不改變控制列高度，畫面不會跳 */
+/* 貼頂時縮小留白：上下內距共少 34px，同時加 34px 下外距，總高度不變，下方內容不會跳 */
+.control-bar.stuck {
+  margin-bottom: 58px;
+}
+.control-bar.stuck .inner {
+  padding-top: 14px;
+  padding-bottom: 12px;
+}
+.control-bar.stuck .status.live {
+  margin-top: 10px;
+}
 .control-bar.stuck {
   /* 細線＋柔和陰影（墨色 #1C2A2E 低透明度），表示控制列浮在內容上方 */
   box-shadow:

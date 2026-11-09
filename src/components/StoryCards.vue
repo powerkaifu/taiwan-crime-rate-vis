@@ -26,7 +26,7 @@ const over100 = counties.filter((c) => c.暴力.clearance !== null && c.暴力.c
 const stories = [
   {
     id: 'count-vs-rate',
-    title: '件數第 1 不等於最危險',
+    title: '件數第 1 不等於犯罪率第 1',
     body: `${topCount.id}件數全國第 1，換算每十萬人後是第 ${topCount.全般.rankRate}；${topRate.id}件數第 ${topRate.全般.rankCount}，犯罪率卻是全國第 1。`,
     crimeType: '全般',
     barMode: 'rate',
