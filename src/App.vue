@@ -2,6 +2,7 @@
 import ControlBar from './components/ControlBar.vue'
 import RankBarChart from './components/RankBarChart.vue'
 import ScatterPlot from './components/ScatterPlot.vue'
+import TileMap from './components/TileMap.vue'
 import { useCrimeData } from './composables/useCrimeData.js'
 
 const { meta } = useCrimeData()
@@ -15,6 +16,7 @@ const { meta } = useCrimeData()
     <div class="charts">
       <RankBarChart />
       <ScatterPlot />
+      <TileMap />
     </div>
   </main>
 </template>

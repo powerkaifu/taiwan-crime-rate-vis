@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs'
 import { buildCrimeData } from '../src/utils/crimeModel.js'
 import { poissonCI } from '../src/utils/stats.js'
+import { validateTileLayout } from '../src/utils/tileLayout.js'
 
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8')
 const { counties, meta } = buildCrimeData(
@@ -52,6 +53,7 @@ check('連江 暴力區間下限', by('連江縣').暴力.ciLow, 0)
 check('Poisson 區間 k=8 下限', ci8lo, 3.4538, 1e-3)
 check('Poisson 區間 k=8 上限', ci8hi, 15.7632, 1e-3)
 check('全國 2025 全般件數', meta.national.全般.count, 608717)
+check('等積地圖座標（錯誤數）', validateTileLayout(counties.map((c) => c.id)).length, 0)
 
 console.log(failed ? `\n${failed} 項不符` : '\n全部通過')
 process.exit(failed ? 1 : 0)
