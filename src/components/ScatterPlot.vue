@@ -7,6 +7,7 @@ import { useCrimeData } from '../composables/useCrimeData.js'
 import { emphasis, useViewState } from '../composables/useViewState.js'
 import { REGION_COLORS } from '../utils/colors.js'
 import { headlineB } from '../utils/headlines.js'
+import { CARD_CHROME, useLayoutWidth } from '../composables/useLayoutWidth.js'
 import ChartDataTable from './ChartDataTable.vue'
 
 const { counties, meta } = useCrimeData()
@@ -14,10 +15,13 @@ const { state, hover, togglePin } = useViewState()
 
 const svgRef = ref(null)
 const showTable = ref(false)
-const W = 1114 // 第 12 步：B 單獨一列、全寬
+// 第 12 步：B 單獨一列、全寬；寬度隨內容區調整，改變時整張重建
+const contentW = useLayoutWidth()
+const svgW = computed(() => contentW.value - CARD_CHROME)
+let W = svgW.value
 const H = 480
 const M = { top: 24, right: 28, bottom: 56, left: 64 }
-const innerW = W - M.left - M.right
+let innerW = W - M.left - M.right
 const innerH = H - M.top - M.bottom
 const DURATION = 750
 
@@ -175,8 +179,11 @@ function updateEmphasis(animate = true) {
     .attr('opacity', (d) => emphasis(d, state))
 }
 
-onMounted(() => {
+function build() {
+  W = svgW.value
+  innerW = W - M.left - M.right
   const svg = d3.select(svgRef.value)
+  svg.selectAll('*').remove()
   g = svg.append('g').attr('transform', `translate(${M.left},${M.top})`)
   x = d3.scaleLinear().range([0, innerW])
   y = d3.scaleLinear().range([innerH, 0])
@@ -231,7 +238,10 @@ onMounted(() => {
   g.append('g').attr('class', 'cis')
   g.append('g').attr('class', 'dots')
   draw(false)
-})
+}
+
+onMounted(build)
+watch(svgW, build)
 
 watch(() => state.crimeType, () => draw(true))
 watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
@@ -251,7 +261,7 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
       <span v-if="isViolent">細線為犯罪率 95% 信賴區間。</span>
     </p>
     <ChartDataTable v-if="showTable" kind="B" />
-    <svg v-show="!showTable" ref="svgRef" :viewBox="`0 0 ${W} ${H}`" :width="W" :height="H" role="img" :aria-label="`${typeLabel}各縣市犯罪率與破獲率散佈圖`" />
+    <svg v-show="!showTable" ref="svgRef" :viewBox="`0 0 ${svgW} ${H}`" :width="svgW" :height="H" role="img" :aria-label="`${typeLabel}各縣市犯罪率與破獲率散佈圖`" />
     <ul v-show="!showTable" class="legend" aria-label="區域圖例">
       <li v-for="reg in regions" :key="reg">
         <span class="swatch" :style="{ background: REGION_COLORS[reg] }" />{{ reg }}

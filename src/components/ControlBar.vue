@@ -86,7 +86,7 @@ const summary = computed(() => (focusId.value ? countySummary(byId.get(focusId.v
   margin-bottom: 24px;
 }
 .inner {
-  max-width: 1260px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 14px 48px 10px;
 }

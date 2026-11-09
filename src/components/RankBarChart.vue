@@ -6,6 +6,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useCrimeData } from '../composables/useCrimeData.js'
 import { emphasis, useViewState } from '../composables/useViewState.js'
 import { headlineA } from '../utils/headlines.js'
+import { CARD_CHROME, GRID_GAP, useLayoutWidth } from '../composables/useLayoutWidth.js'
 import ChartDataTable from './ChartDataTable.vue'
 
 const { counties } = useCrimeData()
@@ -15,9 +16,10 @@ const svgRef = ref(null)
 const showTable = ref(false)
 const ROW_H = 20 // 第 12 步：壓縮列高，讓 A 與 C 並排時一屏看得完
 const M = { top: 28, right: 336, bottom: 8, left: 76 } // 右側要放得下「件數第 17／率第 1 ▲16 件數少」
-const W = 714 // 與右側圖 C 並排：A 卡片 764＋間距 24＋C 卡片 376＝1164
+// 寬度＝內容區 − 間距 − 圖 C 卡片（376）− 本卡片內距與邊框
+const contentW = useLayoutWidth()
+const W = computed(() => contentW.value - GRID_GAP - 376 - CARD_CHROME)
 const H = M.top + counties.length * ROW_H + M.bottom
-const innerW = W - M.left - M.right
 const DURATION = 750
 
 const typeLabel = computed(() => ({ 全般: '全般刑案', 暴力: '暴力犯罪', 竊盜: '竊盜' })[state.crimeType])
@@ -37,6 +39,8 @@ let g, axisG, x
 
 function draw(animate) {
   const type = state.crimeType
+  const innerW = W.value - M.left - M.right
+  x.range([0, innerW])
   // 由高到低；數值相同時依縣市名稱，讓順序穩定
   const data = [...counties].sort((a, b) => value(b) - value(a) || a.id.localeCompare(b.id, 'zh-Hant'))
   const y = d3
@@ -66,13 +70,13 @@ function draw(animate) {
         .append('g')
         .attr('class', 'row')
         .attr('transform', (d) => `translate(0,${y(d.id)})`)
-      r.append('rect').attr('class', 'hit').attr('x', -M.left).attr('width', W).attr('fill', 'transparent')
+      r.append('rect').attr('class', 'hit').attr('x', -M.left).attr('fill', 'transparent')
       r.append('text').attr('class', 'name').attr('x', -10).attr('text-anchor', 'end')
       r.append('rect').attr('class', 'bar').attr('width', 0).attr('rx', 2)
       r.append('line').attr('class', 'ci')
       r.append('text').attr('class', 'ci-arrow').attr('dy', '0.35em').text('▸')
-      r.append('text').attr('class', 'val').attr('x', innerW + 12)
-      r.append('text').attr('class', 'rank').attr('x', innerW + 100)
+      r.append('text').attr('class', 'val')
+      r.append('text').attr('class', 'rank')
       return r
     })
 
@@ -83,7 +87,7 @@ function draw(animate) {
 
   const mid = y.bandwidth() / 2
   rows.transition(t).attr('transform', (d) => `translate(0,${y(d.id)})`)
-  rows.select('rect.hit').attr('y', -(ROW_H - y.bandwidth()) / 2).attr('height', ROW_H)
+  rows.select('rect.hit').attr('width', W.value).attr('y', -(ROW_H - y.bandwidth()) / 2).attr('height', ROW_H)
   rows
     .select('text.name')
     .attr('y', mid)
@@ -109,11 +113,13 @@ function draw(animate) {
     .attr('opacity', (d) => (clipped(d) ? 1 : 0))
   rows
     .select('text.val')
+    .attr('x', innerW + 12)
     .attr('y', mid)
     .attr('dy', '0.35em')
     .text((d) => fmtValue(value(d)) + (state.barMode === 'rate' && d[type].count === 0 ? '（0 件）' : ''))
   rows
     .select('text.rank')
+    .attr('x', innerW + 100)
     .attr('y', mid)
     .attr('dy', '0.35em')
     .each(function (d) {
@@ -146,11 +152,12 @@ onMounted(() => {
   const svg = d3.select(svgRef.value)
   g = svg.append('g').attr('transform', `translate(${M.left},${M.top})`)
   axisG = g.append('g').attr('class', 'axis')
-  x = d3.scaleLinear().range([0, innerW])
+  x = d3.scaleLinear()
   draw(false)
 })
 
 watch(() => [state.barMode, state.crimeType], () => draw(true))
+watch(W, () => draw(false))
 watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
 </script>
 

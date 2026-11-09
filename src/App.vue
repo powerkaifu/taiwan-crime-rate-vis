@@ -44,9 +44,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </template>
 
 <style scoped>
-/* 內容區置中：寬度＝圖表 B＋C 並排（約 1164px）＋左右各 48px；文字仍靠左對齊 */
+/* 內容區置中：最寬 1440px（左右各 48px）；圖 A、B 依可用寬度調整（composables/useLayoutWidth.js）；文字仍靠左對齊 */
 .wrap {
-  max-width: 1260px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 0 48px;
 }
