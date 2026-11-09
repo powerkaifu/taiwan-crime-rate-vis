@@ -3,7 +3,7 @@
 ---
 
 activation: Always On
-description: 規範 homework/hw03「同一份資料，排序差多少？」專案的資料、程式、文件與工作流程。課程層級規則（`../../.agents/rules/`）仍然適用；兩者衝突時以本檔為準。
+description: 規範 homework/hw03「同一份資料，排序差多少？」專案的資料、程式、文件與工作流程。課程層級規則（課程根目錄 `.agents/rules/`，即 hw03 往上兩層）仍然適用；兩者衝突時以本檔為準。
 
 ---
 
@@ -68,4 +68,4 @@ description: 規範 homework/hw03「同一份資料，排序差多少？」專�
 
 ## 六、Skills
 
-專案專用的 skills 放在 `.agents/skills/<skill 名稱>/SKILL.md`，寫法見 `.agents/skills/README.md`。課程層級的 skills（`../../.agents/skills/`）仍可使用，例如 `task-abstraction`、`d3-chart-builder`。
+專案專用的 skills 放在 `.agents/skills/<skill 名稱>/SKILL.md`，寫法見 `.agents/skills/README.md`。課程層級的 skills（課程根目錄 `.agents/skills/`）仍可使用，例如 `task-abstraction`、`d3-chart-builder`。

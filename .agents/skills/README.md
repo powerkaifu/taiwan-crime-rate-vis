@@ -1,6 +1,6 @@
 # HW03 專案 Skills
 
-這個資料夾放**只給 hw03 使用**的 skills。課程共用的 skills 在 `../../../.agents/skills/`，不需要複製過來。
+這個資料夾放**只給 hw03 使用**的 skills。課程共用的 skills 在課程根目錄的 `.agents/skills/`（hw03 往上兩層），不需要複製過來。
 
 ## 新增一個 skill
 
