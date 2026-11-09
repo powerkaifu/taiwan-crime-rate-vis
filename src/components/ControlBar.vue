@@ -49,6 +49,7 @@ const status = computed(() => {
 
 <template>
   <div class="control-bar">
+    <div class="inner">
     <div class="groups">
       <div v-for="g in groups" :key="g.label" class="group" role="group" :aria-label="g.label">
         <span class="label">{{ g.label }}</span>
@@ -70,18 +71,23 @@ const status = computed(() => {
       <span class="hint">滑鼠移到縣市上看數字；點一下鎖定，點空白處或按 Esc 取消。</span>
     </p>
     <p v-if="state.filter !== 'all'" class="status">其他縣市變淡但保留；名次與中位數仍以全國 22 縣市計算。</p>
+    </div>
   </div>
 </template>
 
 <style scoped>
-/* 捲動時固定在頂端，看圖表 B、C 時也能切換 */
+/* 捲動時固定在頂端，看圖表 B、C 時也能切換；底色與分隔線延伸到整個視窗寬，內容與頁面同寬置中 */
 .control-bar {
   position: sticky;
   top: 0;
   z-index: 5;
   background: var(--paper);
   border-bottom: 1px solid var(--line);
-  margin: 0 -48px 24px;
+  margin-bottom: 24px;
+}
+.inner {
+  max-width: 1260px;
+  margin: 0 auto;
   padding: 14px 48px 10px;
 }
 .groups {

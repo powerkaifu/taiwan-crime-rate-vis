@@ -95,7 +95,6 @@ function choose(story) {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   margin: 28px 0 0;
-  max-width: 1136px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--sheet);

@@ -28,7 +28,6 @@ const { meta } = useCrimeData()
   margin-top: 40px;
   padding-top: 24px;
   border-top: 1px solid var(--color-border);
-  max-width: 1136px;
   color: var(--color-ink-soft);
   font-size: var(--font-min);
   line-height: 1.7;

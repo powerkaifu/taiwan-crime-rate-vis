@@ -24,24 +24,38 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </script>
 
 <template>
-  <main class="app" @click="onClick">
-    <h1>同一份資料，排序差多少？</h1>
-    <p class="subtitle">台灣 22 縣市 2025 年刑案：用件數排、用每十萬人犯罪率排，名次各是多少。資料：{{ meta.source }}</p>
-    <StoryCards />
+  <div class="page" @click="onClick">
+    <header class="wrap intro">
+      <h1>同一份資料，排序差多少？</h1>
+      <p class="subtitle">台灣 22 縣市 2025 年刑案：用件數排、用每十萬人犯罪率排，名次各是多少。資料：{{ meta.source }}</p>
+      <StoryCards />
+    </header>
     <ControlBar />
-    <div class="charts">
-      <RankBarChart class="chart-a" />
-      <ScatterPlot class="chart-b" />
-      <TileMap class="chart-c" />
-    </div>
-    <SiteFooter />
+    <main class="wrap">
+      <div class="charts">
+        <RankBarChart class="chart-a" />
+        <ScatterPlot class="chart-b" />
+        <TileMap class="chart-c" />
+      </div>
+      <SiteFooter />
+    </main>
     <ChartTooltip />
-  </main>
+  </div>
 </template>
 
 <style scoped>
-.app {
-  padding: 40px 48px;
+/* 內容區置中：寬度＝圖表 B＋C 並排（約 1164px）＋左右各 48px；文字仍靠左對齊 */
+.wrap {
+  max-width: 1260px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+.intro {
+  padding-top: 40px;
+  padding-bottom: 24px;
+}
+main.wrap {
+  padding-bottom: 40px;
 }
 h1 {
   margin: 0 0 8px;
