@@ -8,7 +8,7 @@ import { emphasis, useViewState } from '../composables/useViewState.js'
 import ChartDataTable from './ChartDataTable.vue'
 
 const { counties } = useCrimeData()
-const { state, setBarMode, hover, togglePin } = useViewState()
+const { state, hover, togglePin } = useViewState()
 
 const svgRef = ref(null)
 const showTable = ref(false)
@@ -152,15 +152,7 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
     <header class="chart-header">
       <h2>A 排名橫條圖：{{ typeLabel }}</h2>
       <div class="head-right">
-      <button class="table-btn" :aria-pressed="showTable" @click="showTable = !showTable">{{ showTable ? '顯示圖表' : '資料表' }}</button>
-      <div class="toggle" role="group" aria-label="排序依據">
-        <button :class="{ active: state.barMode === 'count' }" :aria-pressed="state.barMode === 'count'" @click="setBarMode('count')">
-          發生件數
-        </button>
-        <button :class="{ active: state.barMode === 'rate' }" :aria-pressed="state.barMode === 'rate'" @click="setBarMode('rate')">
-          每十萬人犯罪率
-        </button>
-      </div>
+        <button class="table-btn" :aria-pressed="showTable" @click="showTable = !showTable">{{ showTable ? '顯示圖表' : '資料表' }}</button>
       </div>
     </header>
     <p class="caption">
@@ -176,7 +168,7 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
 .chart-card {
   background: var(--color-card);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: var(--radius);
   padding: 20px 24px;
   display: inline-block;
 }
@@ -195,45 +187,16 @@ h2 {
   font-size: var(--font-min);
   margin: 8px 0 4px;
 }
-.toggle button {
-  font: inherit;
-  font-size: 15px;
-  padding: 6px 14px;
-  border: 1px solid var(--color-border);
-  background: var(--color-card);
-  color: var(--color-ink);
-  cursor: pointer;
-}
-.toggle button:first-child {
-  border-radius: 999px 0 0 999px;
-}
-.toggle button:last-child {
-  border-radius: 0 999px 999px 0;
-  border-left: none;
-}
-.toggle button.active {
-  background: var(--color-ink);
-  border-color: var(--color-ink);
-  color: #fff;
-}
-.toggle button:focus-visible {
-  outline: 3px solid var(--color-accent-2);
-  outline-offset: 2px;
-}
 
 .table-btn {
   font: inherit;
   font-size: var(--font-min);
   padding: 4px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius);
   border: 1px solid var(--color-border);
   background: var(--color-card);
   color: var(--color-ink-soft);
   cursor: pointer;
-}
-.table-btn:focus-visible {
-  outline: 3px solid var(--color-accent-2);
-  outline-offset: 2px;
 }
 .head {
   display: flex;

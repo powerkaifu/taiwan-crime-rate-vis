@@ -1,16 +1,31 @@
-/* 色彩與字級變數（規格書 §4.1），之後各元件共用 */
+/* 設計 token（docs/前端設計方向_更正單.md）：每個顏色只代表一件事 */
 :root {
-  --color-ink: #1f2a3a;
-  --color-ink-soft: #4a5568;
-  --color-muted: #7a8594;
-  --color-bg: #f7f6f2;
-  --color-bg-alt: #eef1f4;
-  --color-card: #ffffff;
-  --color-border: #dde2e8;
-  --color-accent: #2f6db5;
-  --color-accent-2: #e08a3c;
+  --paper: #eef2f1; /* 頁面背景 */
+  --sheet: #fbfcfc; /* 圖表區底色 */
+  --ink: #1c2a2e; /* 文字、軸線、選取的故事、焦點框 */
+  --slate: #55646b; /* 次要文字 */
+  --slate-light: #5f6e74; /* 圖說、註解 */
+  --count: #7f8c92; /* 件數模式的橫條 */
+  --rate: #0e6f7a; /* 每十萬人犯罪率 */
+  --mark: #f4c542; /* 被選取縣市的底色帶（不當文字色） */
+  --line: #cbd5d6; /* 1px 邊框與分隔線 */
+  --paper-deep: #e3e9e8; /* 表頭等次要底色 */
+  --radius: 6px;
+
   --font-sans: 'Noto Sans TC', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: 'Noto Serif TC', 'Noto Sans TC', serif;
   --font-min: 14px;
+
+  /* 舊名稱對應到新 token，元件逐步改用新名稱 */
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--slate);
+  --color-muted: var(--slate-light);
+  --color-bg: var(--paper);
+  --color-bg-alt: var(--paper-deep);
+  --color-card: var(--sheet);
+  --color-border: var(--line);
+  --color-accent: var(--rate);
+  --color-accent-2: var(--ink);
 }
 
 * {
@@ -22,6 +37,22 @@ body {
   min-width: 1280px;
   font-family: var(--font-sans);
   font-size: 16px;
-  color: var(--color-ink);
-  background: var(--color-bg);
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--paper);
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

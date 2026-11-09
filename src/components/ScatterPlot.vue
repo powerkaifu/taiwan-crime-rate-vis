@@ -260,7 +260,7 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
 .chart-card {
   background: var(--color-card);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: var(--radius);
   padding: 20px 24px;
   display: inline-block;
 }
@@ -296,15 +296,11 @@ h2 {
   font: inherit;
   font-size: var(--font-min);
   padding: 4px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius);
   border: 1px solid var(--color-border);
   background: var(--color-card);
   color: var(--color-ink-soft);
   cursor: pointer;
-}
-.table-btn:focus-visible {
-  outline: 3px solid var(--color-accent-2);
-  outline-offset: 2px;
 }
 .head {
   display: flex;

@@ -26,10 +26,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 <template>
   <main class="app" @click="onClick">
     <h1>同一份資料，排序差多少？</h1>
-    <p class="subtitle">台灣 22 縣市犯罪率與破獲率｜資料：{{ meta.source }}</p>
+    <p class="subtitle">台灣 22 縣市 2025 年刑案：用件數排、用每十萬人犯罪率排，名次各是多少。資料：{{ meta.source }}</p>
     <StoryCards />
     <ControlBar />
-    <p class="howto">滑鼠移到縣市上看詳細數字；點一下鎖定，三張圖同步標示，點空白處或按 Esc 取消。</p>
     <div class="charts">
       <RankBarChart class="chart-a" />
       <ScatterPlot class="chart-b" />
@@ -45,17 +44,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   padding: 40px 48px;
 }
 h1 {
-  margin: 0 0 4px;
-  font-size: 30px;
+  margin: 0 0 8px;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
 }
 .subtitle {
   margin: 0;
-  color: var(--color-ink-soft);
-}
-.howto {
-  margin: 0 0 16px;
-  font-size: var(--font-min);
-  color: var(--color-muted);
+  max-width: 64em;
+  color: var(--slate);
 }
 /* 版面：A 單獨一列，B、C 並排（最小寬度 1280px 也放得下） */
 .charts {

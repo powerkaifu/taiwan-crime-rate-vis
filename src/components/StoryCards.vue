@@ -1,5 +1,5 @@
 <script setup>
-// 發現卡（規格書 §6）：文字中的數字一律由資料計算，不寫死。
+// 故事帶（規格書 §6；設計見 docs/前端設計方向_更正單.md）：文字中的數字一律由資料計算，不寫死。
 import * as d3 from 'd3'
 import { useCrimeData } from '../composables/useCrimeData.js'
 import { useViewState } from '../composables/useViewState.js'
@@ -8,25 +8,25 @@ const { counties, meta } = useCrimeData()
 const { state, applyStory } = useViewState()
 const f2 = d3.format(',.2f')
 
-// 卡 1：件數第 1 與犯罪率第 1
+// 故事 1：件數第 1 與犯罪率第 1
 const topCount = counties.find((c) => c.全般.rankCount === 1)
 const topRate = counties.find((c) => c.全般.rankRate === 1)
 
-// 卡 2：六都的犯罪率名次範圍與破獲率是否都高於中位數
+// 故事 2：六都的犯罪率名次範圍與破獲率是否都高於中位數
 const six = counties.filter((c) => c.isSixCity)
 const sixWorstRank = d3.max(six, (c) => c.全般.rankRate)
 const sixAboveMedian = six.every((c) => c.全般.clearance > meta.types.全般.medianClearance)
 
-// 卡 3：暴力犯罪率第 1 名與其件數、區間
+// 故事 3：暴力犯罪率第 1 名與其件數、區間
 const topViolent = counties.find((c) => c.暴力.rankRate === 1)
 
-// 卡 4：暴力犯罪破獲率超過 100% 的縣市數
+// 故事 4：暴力犯罪破獲率超過 100% 的縣市數
 const over100 = counties.filter((c) => c.暴力.clearance !== null && c.暴力.clearance > 100).length
 
 const stories = [
   {
     id: 'count-vs-rate',
-    title: `件數第 1 ≠ 最危險`,
+    title: '件數第 1 不等於最危險',
     body: `${topCount.id}件數全國第 1，換算每十萬人後是第 ${topCount.全般.rankRate}；${topRate.id}件數第 ${topRate.全般.rankCount}，犯罪率卻是全國第 1。`,
     crimeType: '全般',
     barMode: 'rate',
@@ -68,85 +68,77 @@ const stories = [
 
 function choose(story) {
   applyStory(story)
-  document.querySelector(story.target)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  document.querySelector(story.target)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
 }
-
 </script>
 
 <template>
-  <section class="stories" aria-label="發現卡">
+  <section class="stories" aria-label="四個發現，點選後圖表會切換到對應狀態">
     <button
-      v-for="(s, i) in stories"
+      v-for="s in stories"
       :key="s.id"
-      class="card"
+      class="story"
       :class="{ active: state.activeStory === s.id }"
       :aria-pressed="state.activeStory === s.id"
       @click="choose(s)"
     >
-      <span class="num">發現 {{ i + 1 }}</span>
       <span class="title">{{ s.title }}</span>
       <span class="body">{{ s.body }}</span>
-      <span class="go">看圖表 →</span>
     </button>
   </section>
 </template>
 
 <style scoped>
+/* 一條分段的故事帶：共用一個外框，選取的那段以墨色填滿 */
 .stories {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin: 24px 0 8px;
+  margin: 28px 0 0;
   max-width: 1136px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--sheet);
+  overflow: hidden;
 }
-.card {
+.story {
   display: flex;
   flex-direction: column;
   gap: 6px;
   text-align: left;
   font: inherit;
-  color: var(--color-ink);
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 16px;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--line);
+  padding: 16px 18px 18px;
   cursor: pointer;
 }
-.card:hover {
-  border-color: var(--color-accent);
+.story:first-child {
+  border-left: none;
 }
-.card.active {
-  background: var(--color-ink);
-  border-color: var(--color-ink);
-  color: #f7f6f2;
+.story:hover {
+  background: var(--paper);
 }
-.card:focus-visible {
-  outline: 3px solid var(--color-accent-2);
-  outline-offset: 2px;
+.story.active {
+  background: var(--ink);
+  color: var(--paper);
 }
-.num {
-  font-size: var(--font-min);
-  font-weight: 700;
-  color: var(--color-accent-2);
+.story:focus-visible {
+  outline-offset: -4px;
 }
 .title {
-  font-size: 17px;
+  font-family: var(--font-serif);
   font-weight: 700;
+  font-size: 18px;
+  line-height: 1.4;
 }
 .body {
   font-size: var(--font-min);
-  line-height: 1.6;
-  color: var(--color-ink-soft);
+  line-height: 1.65;
+  color: var(--slate);
 }
-.card.active .body {
-  color: #c9d3de;
-}
-.go {
-  margin-top: auto;
-  font-size: var(--font-min);
-  color: var(--color-accent);
-}
-.card.active .go {
-  color: #9cc0e8;
+.story.active .body {
+  color: #c9d4d6;
 }
 </style>
