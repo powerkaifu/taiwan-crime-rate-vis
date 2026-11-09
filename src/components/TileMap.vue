@@ -1,28 +1,27 @@
 <script setup>
-// 圖表 C：等積方塊地圖（規格書 §4.2、§4.4）
+// 圖表 B：等積方塊地圖（規格書 §4.2、§4.4）
 // 22 縣市各占一格、大小相同，避免面積大的縣市在視覺上被放大。
 import * as d3 from 'd3'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useCrimeData } from '../composables/useCrimeData.js'
 import { emphasis, useViewState } from '../composables/useViewState.js'
-import { headlineC } from '../utils/headlines.js'
+import { headlineTile } from '../utils/headlines.js'
 import ChartDataTable from './ChartDataTable.vue'
-import { TILE_COLS, TILE_LAYOUT, TILE_ROWS } from '../utils/tileLayout.js'
+import { TILE_CELL as CELL, TILE_COLS, TILE_GAP as GAP, TILE_LAYOUT, TILE_ROWS } from '../utils/tileLayout.js'
 
 const { counties } = useCrimeData()
 const { state, hover, togglePin } = useViewState()
 
 const svgRef = ref(null)
 const showTable = ref(false)
-const CELL = 52 // 第 12 步：與圖 A 並排，格子 64→52
-const GAP = 6
+// 格子尺寸與卡片寬度定義在 utils/tileLayout.js（圖 A 要用它推算自己的寬度）
 const ISLAND_GAP = CELL / 2 // 離島欄與本島之間多留半格
 const M = { top: 8, right: 8, bottom: 8, left: 8 }
 const W = M.left + TILE_COLS * CELL + (TILE_COLS - 1) * GAP + ISLAND_GAP + M.right
 const H = M.top + TILE_ROWS * CELL + (TILE_ROWS - 1) * GAP + M.bottom
 const DURATION = 750
 
-const headline = computed(() => headlineC(counties, state.crimeType))
+const headline = computed(() => headlineTile(counties, state.crimeType))
 const typeLabel = computed(() => ({ 全般: '全般刑案', 暴力: '暴力犯罪', 竊盜: '竊盜' })[state.crimeType])
 const isViolent = computed(() => state.crimeType === '暴力')
 
@@ -134,10 +133,10 @@ onMounted(() => {
     .append('text')
     .attr('class', 'name')
     .attr('x', CELL / 2)
-    .attr('y', 22)
+    .attr('y', 25)
     .attr('text-anchor', 'middle')
     .text((d) => d.short)
-  cells.append('text').attr('class', 'value').attr('x', CELL / 2).attr('y', 39).attr('text-anchor', 'middle')
+  cells.append('text').attr('class', 'value').attr('x', CELL / 2).attr('y', 44).attr('text-anchor', 'middle')
 
   draw(false)
 })
@@ -150,13 +149,13 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
   <section class="chart-card">
     <div class="head">
       <div>
-        <p class="kicker">C 等積方塊地圖・{{ typeLabel }}</p>
+        <p class="kicker">B 等積方塊地圖・{{ typeLabel }}</p>
         <h2>{{ headline }}</h2>
       </div>
       <button class="table-btn" :aria-pressed="showTable" @click="showTable = !showTable">{{ showTable ? '顯示圖表' : '資料表' }}</button>
     </div>
     <p class="caption">每個縣市一格、大小相同；顏色越深，每十萬人犯罪率越高。左欄為離島。</p>
-    <ChartDataTable v-if="showTable" kind="C" />
+    <ChartDataTable v-if="showTable" kind="B" />
     <svg v-show="!showTable" ref="svgRef" :viewBox="`0 0 ${W} ${H}`" :width="W" :height="H" role="img" :aria-label="`${typeLabel}各縣市犯罪率等積方塊地圖`" />
     <div v-show="!showTable" class="legend" aria-hidden="true">
       <span>{{ legend.min }}</span>

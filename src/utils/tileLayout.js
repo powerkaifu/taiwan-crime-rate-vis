@@ -27,6 +27,12 @@ export const TILE_LAYOUT = [
 export const TILE_COLS = 5
 export const TILE_ROWS = 9
 
+// 圖 B 等積方塊地圖的格子尺寸；卡片寬度＝svg 寬＋左右內距與邊框（50）
+export const TILE_CELL = 60
+export const TILE_GAP = 6
+export const TILE_SVG_W = 8 + TILE_COLS * TILE_CELL + (TILE_COLS - 1) * TILE_GAP + TILE_CELL / 2 + 8
+export const TILE_CARD_W = TILE_SVG_W + 50
+
 /** 檢查座標：不可重複、縣市不可遺漏或多出；回傳錯誤訊息陣列 */
 export function validateTileLayout(countyIds) {
   const errors = []

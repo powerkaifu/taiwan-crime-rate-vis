@@ -7,6 +7,7 @@ import { useCrimeData } from '../composables/useCrimeData.js'
 import { emphasis, useViewState } from '../composables/useViewState.js'
 import { headlineA } from '../utils/headlines.js'
 import { CARD_CHROME, GRID_GAP, useLayoutWidth } from '../composables/useLayoutWidth.js'
+import { TILE_CARD_W } from '../utils/tileLayout.js'
 import ChartDataTable from './ChartDataTable.vue'
 
 const { counties } = useCrimeData()
@@ -16,9 +17,9 @@ const svgRef = ref(null)
 const showTable = ref(false)
 const ROW_H = 20 // 第 12 步：壓縮列高，讓 A 與 C 並排時一屏看得完
 const M = { top: 28, right: 336, bottom: 8, left: 76 } // 右側要放得下「件數第 17／率第 1 ▲16 件數少」
-// 寬度＝內容區 − 間距 − 圖 C 卡片（376）− 本卡片內距與邊框
+// 寬度＝內容區 − 間距 − 圖 B 卡片 − 本卡片內距與邊框
 const contentW = useLayoutWidth()
-const W = computed(() => contentW.value - GRID_GAP - 376 - CARD_CHROME)
+const W = computed(() => contentW.value - GRID_GAP - TILE_CARD_W - CARD_CHROME)
 const H = M.top + counties.length * ROW_H + M.bottom
 const DURATION = 750
 
@@ -60,7 +61,7 @@ function draw(animate) {
 
   axisG
     .transition(t)
-    .call(d3.axisTop(x).ticks(5).tickSizeOuter(0).tickFormat(state.barMode === 'count' ? d3.format('~s') : d3.format(',')))
+    .call(d3.axisTop(x).ticks(Math.max(3, Math.floor(innerW / 90))).tickSizeOuter(0).tickFormat(state.barMode === 'count' ? d3.format('~s') : d3.format(',')))
 
   const rows = g
     .selectAll('g.row')

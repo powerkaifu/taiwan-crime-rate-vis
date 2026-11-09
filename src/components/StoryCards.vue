@@ -42,7 +42,7 @@ const stories = [
     barMode: 'rate',
     filter: 'six',
     pinned: null,
-    target: '.chart-b',
+    target: '.chart-c',
   },
   {
     id: 'small-n',
@@ -62,7 +62,7 @@ const stories = [
     barMode: 'rate',
     filter: 'all',
     pinned: null,
-    target: '.chart-b',
+    target: '.chart-c',
   },
 ]
 

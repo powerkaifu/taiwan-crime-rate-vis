@@ -18,8 +18,8 @@ export function headlineA(counties, type, mode) {
   return `犯罪率最高是${topRate.id}（件數第 ${topRate[type].rankCount}）；件數最多的${topCount.id}排第 ${topCount[type].rankRate}`
 }
 
-/** 圖 B：犯罪率高於中位數、破獲率低於中位數的縣市 */
-export function headlineB(counties, meta, type) {
+/** 圖 C（散佈圖）：犯罪率高於中位數、破獲率低於中位數的縣市 */
+export function headlineScatter(counties, meta, type) {
   const { medianRate, medianClearance } = meta.types[type]
   const hit = counties
     .filter((c) => c[type].clearance !== null && c[type].rate > medianRate && c[type].clearance < medianClearance)
@@ -29,8 +29,8 @@ export function headlineB(counties, meta, type) {
   return `犯罪率高於中位數、破獲率低於中位數：${names} ${hit.length} 縣市`
 }
 
-/** 圖 C：顏色最深的 3 個縣市 */
-export function headlineC(counties, type) {
+/** 圖 B（等積方塊地圖）：顏色最深的 3 個縣市 */
+export function headlineTile(counties, type) {
   const top = [...counties].sort(byRate(type)).slice(0, 3)
   return `顏色最深：${top.map((c) => c.id).join('、')}`
 }

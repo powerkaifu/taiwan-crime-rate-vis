@@ -1,12 +1,12 @@
 <script setup>
-// 圖表 B：犯罪率 × 破獲率散佈圖（規格書 §4.2）
+// 圖表 C：犯罪率 × 破獲率散佈圖（規格書 §4.2）
 // 以 22 縣市中位數分區；象限只寫位置描述，不貼價值標籤。
 import * as d3 from 'd3'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useCrimeData } from '../composables/useCrimeData.js'
 import { emphasis, useViewState } from '../composables/useViewState.js'
 import { REGION_COLORS } from '../utils/colors.js'
-import { headlineB } from '../utils/headlines.js'
+import { headlineScatter } from '../utils/headlines.js'
 import { CARD_CHROME, useLayoutWidth } from '../composables/useLayoutWidth.js'
 import ChartDataTable from './ChartDataTable.vue'
 
@@ -30,7 +30,7 @@ const regions = Object.keys(REGION_COLORS)
 // 各案類的 Y 軸範圍（規格書 §4.2 預期值）
 const Y_DOMAIN = { 全般: [50, 100], 暴力: [75, 120], 竊盜: [50, 100] }
 
-const headline = computed(() => headlineB(counties, meta, state.crimeType))
+const headline = computed(() => headlineScatter(counties, meta, state.crimeType))
 const typeLabel = computed(() => ({ 全般: '全般刑案', 暴力: '暴力犯罪', 竊盜: '竊盜' })[state.crimeType])
 const isViolent = computed(() => state.crimeType === '暴力')
 const medians = computed(() => meta.types[state.crimeType])
@@ -251,7 +251,7 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
   <section class="chart-card">
     <div class="head">
       <div>
-        <p class="kicker">B 散佈圖・{{ typeLabel }}犯罪率 × 破獲率</p>
+        <p class="kicker">C 散佈圖・{{ typeLabel }}犯罪率 × 破獲率</p>
         <h2>{{ headline }}</h2>
       </div>
       <button class="table-btn" :aria-pressed="showTable" @click="showTable = !showTable">{{ showTable ? '顯示圖表' : '資料表' }}</button>
@@ -260,7 +260,7 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
       虛線為 22 縣市中位數；點越大代表推估人口越多。
       <span v-if="isViolent">細線為犯罪率 95% 信賴區間。</span>
     </p>
-    <ChartDataTable v-if="showTable" kind="B" />
+    <ChartDataTable v-if="showTable" kind="C" />
     <svg v-show="!showTable" ref="svgRef" :viewBox="`0 0 ${svgW} ${H}`" :width="svgW" :height="H" role="img" :aria-label="`${typeLabel}各縣市犯罪率與破獲率散佈圖`" />
     <ul v-show="!showTable" class="legend" aria-label="區域圖例">
       <li v-for="reg in regions" :key="reg">

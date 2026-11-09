@@ -6,7 +6,7 @@ import { useCrimeData } from '../composables/useCrimeData.js'
 import { useViewState } from '../composables/useViewState.js'
 
 const props = defineProps({
-  kind: { type: String, required: true }, // 'A' | 'B' | 'C'
+  kind: { type: String, required: true }, // 'A' 排名橫條圖 | 'B' 等積方塊地圖 | 'C' 散佈圖
 })
 
 const { counties } = useCrimeData()
@@ -59,8 +59,8 @@ const caption = computed(() => {
           <th scope="col">率名次</th>
           <th v-if="kind === 'A'" scope="col">換算後名次</th>
           <th v-if="isViolent" scope="col">95% 信賴區間</th>
-          <th v-if="kind === 'B'" scope="col">破獲率</th>
-          <th v-if="kind === 'B'" scope="col">推估人口</th>
+          <th v-if="kind === 'C'" scope="col">破獲率</th>
+          <th v-if="kind === 'C'" scope="col">推估人口</th>
           <th v-if="isViolent" scope="col">備註</th>
         </tr>
       </thead>
@@ -75,8 +75,8 @@ const caption = computed(() => {
           <td>{{ r.rankRate }}</td>
           <td v-if="kind === 'A'">{{ r.delta }}</td>
           <td v-if="isViolent">{{ r.ci }}</td>
-          <td v-if="kind === 'B'">{{ r.clearance }}</td>
-          <td v-if="kind === 'B'">{{ r.pop }}</td>
+          <td v-if="kind === 'C'">{{ r.clearance }}</td>
+          <td v-if="kind === 'C'">{{ r.pop }}</td>
           <td v-if="isViolent">{{ r.note }}</td>
         </tr>
       </tbody>
