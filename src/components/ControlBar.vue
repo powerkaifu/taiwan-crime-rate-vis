@@ -76,13 +76,12 @@ const summary = computed(() => (focusId.value ? countySummary(byId.get(focusId.v
 </template>
 
 <style scoped>
-/* 捲動時固定在頂端，看下方圖表時也能切換；底色與分隔線延伸到整個視窗寬，內容與頁面同寬置中 */
+/* 捲動時固定在頂端，看下方圖表時也能切換；內容與頁面同寬置中 */
 .control-bar {
   position: sticky;
   top: 0;
   z-index: 5;
-  background: var(--paper);
-  border-bottom: 1px solid var(--line);
+  background: var(--paper); /* 與頁面同底色，不加分隔線，靠留白與內容區隔 */
   margin-bottom: 24px;
 }
 .inner {
