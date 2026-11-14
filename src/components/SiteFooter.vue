@@ -18,7 +18,7 @@ const { meta } = useCrimeData()
     </ul>
     <p class="credit">
       重製對象：林宗弘〈<a href="https://www.thinkingtaiwan.net/article/100493" target="_blank" rel="noopener">六都治理績效比一比</a>〉，想想論壇，2026-10-23。<br />
-      資料分析與視覺化應用 HW3｜嚴庭亞、張凱富、陳予璇
+      資料分析與視覺化應用 期末專題｜嚴庭亞、張凱富、陳予璇
     </p>
   </footer>
 </template>
