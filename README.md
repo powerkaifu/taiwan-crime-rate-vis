@@ -2,8 +2,8 @@
 
 - **課程名稱**：資料分析與視覺化應用
 - **組員**：415085047 嚴庭亞、415085011 張凱富、410262690 陳予璇
-- **GitHub Repository**：〔待補〕
-- **作業網址**：〔待補〕
+- **GitHub Repository**：https://github.com/powerkaifu/taiwan-crime-rate-vis
+- **作業網址**：https://powerkaifu.github.io/taiwan-crime-rate-vis/
 - **影片網址**：〔待補〕
 - **資料來源**：[內政部警政署《警政統計年報》2025 年（民國 114 年）](https://www.npa.gov.tw/ch/app/data/view?module=wg056&id=2217&serno=fbf5a752-9c50-4eb1-a3ac-8d4f7112c70a)
 - **重製對象**：林宗弘〈[六都治理績效比一比](https://www.thinkingtaiwan.net/article/100493)〉，想想論壇，2026-10-23
