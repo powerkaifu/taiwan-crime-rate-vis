@@ -10,11 +10,11 @@
 
 ## 📸 專案執行成果展示
 
-<a href="./docs/screenshots/step8-完整頁面.png" target="_blank" rel="noopener noreferrer">
-  <img src="./docs/screenshots/step8-完整頁面.png" alt="專案完整頁面：發現卡、控制列、排名橫條圖、散佈圖與等積方塊地圖" style="width: 75%;" />
+<a href="./docs/網站製作/screenshots/step8-完整頁面.png" target="_blank" rel="noopener noreferrer">
+  <img src="./docs/網站製作/screenshots/step8-完整頁面.png" alt="專案完整頁面：發現卡、控制列、排名橫條圖、散佈圖與等積方塊地圖" style="width: 75%;" />
 </a>
 
-各步驟截圖見 [`docs/screenshots/`](./docs/screenshots/)。
+各步驟截圖見 [`docs/網站製作/screenshots/`](./docs/網站製作/screenshots/)。
 
 ## 🔁 重製：原報導的問題與我們的做法
 
@@ -120,7 +120,7 @@
 
 1. **資料**：從《警政統計年報》PDF 整理出 `data/csv/`；網站只讀 `各縣市刑案數據.csv` 與 `01_表1…全國歷年走勢.csv`（取 2025 年全國值）。
 2. **規劃**：設計發想與規格見 `docs/網站製作/視覺化系統設計發想書_TamaraMunzner框架.md`、`docs/網站製作/實作規格書.md`。
-3. **實作**：依規格書分 13 步完成（第 11～13 步為前端改版，見 `docs/網站製作/前端設計方向_更正單.md`），每步皆有截圖（`docs/screenshots/`）與 git commit。
+3. **實作**：依規格書分 13 步完成（第 11～13 步為前端改版，見 `docs/網站製作/前端設計方向_更正單.md`），每步皆有截圖（`docs/網站製作/screenshots/`）與 git commit。
 4. **檢查**：整體檢查紀錄見 `docs/第9步_整體檢查紀錄.md`；審查意見與模擬使用者測試見 `docs/第12步_審查意見.md`、`docs/第13步_使用者測試.md`。
 
 ```bash
