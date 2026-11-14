@@ -87,7 +87,7 @@
 | 方法類別（查閱的頁面）                                                                |       分母校正（每十萬人比率）       | 避免面積偏誤（Area-size Bias） |     雙指標協同（犯罪率 × 破獲率）      |                          多視圖連動                          |                                小樣本警示                                 |
 | :------------------------------------------------------------------------------------ | :----------------------------------: | :----------------------------: | :------------------------------------: | :----------------------------------------------------------: | :-----------------------------------------------------------------------: |
 | **靜態數字表格**（想想論壇〈六都治理績效比一比〉表 2）                                |           有（刑案發生率）           |       不適用（沒有地圖）       |                   無                   |                        無（圖片表格）                        |                                    無                                     |
-| **州別比率圖表**（USAFacts〈Which states have the highest and lowest crime rates?〉） |            有（每十萬人）            |  未查證（頁面未說明圖表類型）  |            無（未提破獲率）            |                            未查證                            |                 部分（說明資料不足與統計制度轉換的影響）                  |
+| **等積方塊地圖＋排名表**（USAFacts〈What is the crime rate in the US?〉） | 有（每十萬人） | **有**（每州一格的方塊地圖） | 無（沒有破獲率） | 部分（可切換暴力／財產犯罪） | 無 |
 | **行政區面量圖工具**（BOCSAR NSW Crime Mapping Tool）                                 |    有（預設 Rate Map，每十萬人）     |     無（依行政區面積著色）     |                   無                   | 部分（地圖、表格、趨勢、圖表多個檢視，可在表格固定地區比較） | **有**（人口 1,000～2,000 的地區加斜線並註明慎用；不足 1,000 不顯示比率） |
 | **國際比較圖表**（Our World in Data, Homicide rate）                                  |            有（每十萬人）            |             未查證             | 無（查閱的頁面是單一指標，沒有散佈圖） |                            未查證                            |                                  未查證                                   |
 | **本專案**                                                                            | **有**（圖 A 件數 ⇄ 犯罪率名次更正） |  **有**（圖 B 等積方塊地圖）   |       **有**（圖 C 中位數分區）        |                **有**（三圖連動、篩選、鎖定）                |             **有**（暴力犯罪 95% 信賴區間、件數少於 30 標示）             |
@@ -101,7 +101,7 @@
 **查閱來源**（2026-11-12）：
 
 - BOCSAR：https://bocsar.nsw.gov.au/statistics-dashboards/crime-and-policing/guide-for-the-crime-mapping-tool.html
-- USAFacts：https://usafacts.org/articles/which-states-have-the-least-and-most-crime/
+- USAFacts（11/14 改用組員提供的頁面，並以瀏覽器確認）：https://usafacts.org/answers/what-is-the-crime-rate-in-the-us/country/united-states/
 - Our World in Data：https://ourworldindata.org/grapher/homicide-rate-unodc
 
 ### 4.2 第 13 頁 `Glyph` 具體解法（不需刪頁，改放個體層次視覺摘要）
