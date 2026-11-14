@@ -1,5 +1,5 @@
 <script setup>
-// 故事帶（規格書 §6；設計見 docs/前端設計方向_更正單.md）：文字中的數字一律由資料計算，不寫死。
+// 故事帶（規格書 §6；設計見 docs/網站製作/前端設計方向_更正單.md）：文字中的數字一律由資料計算，不寫死。
 import * as d3 from 'd3'
 import { useCrimeData } from '../composables/useCrimeData.js'
 import { useViewState } from '../composables/useViewState.js'
