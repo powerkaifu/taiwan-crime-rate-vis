@@ -2,7 +2,7 @@
 
 > 對照：老師範本 `VIS_Final_Proposal_template_backup.pptx`（19 頁）
 > 我們的報告：`VIS_Final_Proposal_G01.pptx`
-> 背景分析見 `期中報告Template分析.md`。
+> 範本的設計邏輯見 `期中報告Template_設計邏輯.md`。
 
 **用法**：只看下面這一張表。「再檢查」欄是 11/14 起逐頁複核 G01 實際內容的結果，打勾表示複核後沒有問題。某一列「尚未處理」的事項**全部做完**才打勾；Claude 核對某頁沒問題時會直接打勾。各頁的版面由 Claude 轉成圖片檢查，PowerPoint 檢查另列在「全份」。
 
