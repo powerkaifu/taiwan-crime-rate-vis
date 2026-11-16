@@ -44,6 +44,8 @@ const typeLabel = computed(() => ({ 全般: '全般刑案', 暴力: '暴力犯�
 const isViolent = computed(() => state.crimeType === '暴力')
 const medians = computed(() => meta.types[state.crimeType])
 const fmt = d3.format(',.2f')
+// 破獲率剛好等於中位數（落在分隔線上）的縣市數：不計入四區
+const onMedian = ref(0)
 
 let g, x, y, r, xAxisG, yAxisG
 const QUADS = [
@@ -170,6 +172,45 @@ function draw(animate) {
         ? `中位數 ${fmtPct(medians.value.medianClearance)}（與參考線重合）`
         : `中位數 ${fmtPct(medians.value.medianClearance)}`,
     )
+
+  // 象限名稱＋縣市數（以全國 22 縣市計算，不受篩選影響；落在中位數線上的不計）
+  const mr = medians.value.medianRate
+  const mc = medians.value.medianClearance
+  const qCount = { tr: 0, tl: 0, br: 0, bl: 0 }
+  let onLine = 0
+  for (const d of data) {
+    const a = d[type].rate
+    const b = d[type].clearance
+    if (a === mr || b === mc) {
+      onLine++
+      continue
+    }
+    qCount[(b > mc ? 't' : 'b') + (a > mr ? 'r' : 'l')]++
+  }
+  onMedian.value = onLine
+  const pad = 10
+  const quadPos = {
+    tr: [innerW - pad - 6, pad + 14, 'end'],
+    tl: [pad + 6, pad + 14, 'start'],
+    br: [innerW - pad - 6, innerH - pad - 24, 'end'],
+    bl: [pad + 6, innerH - pad - 24, 'start'],
+  }
+  g.selectAll('g.quad').each(function (q) {
+    const gq = d3.select(this)
+    const [px, py, anchor] = quadPos[q.key]
+    const tx = gq
+      .select('text')
+      .attr('x', px)
+      .attr('y', py)
+      .attr('text-anchor', anchor)
+      .text(`${q.text}（${qCount[q.key]} 縣市）`)
+    const bb = tx.node().getBBox()
+    gq.select('rect')
+      .attr('x', bb.x - 6)
+      .attr('y', bb.y - 3)
+      .attr('width', bb.width + 12)
+      .attr('height', bb.height + 6)
+  })
 
   // 暴力犯罪：犯罪率的 95% 信賴區間（水平線）
   g.select('g.cis')
@@ -301,22 +342,10 @@ function build() {
   g.append('text').attr('class', 'med-label med-x-label').attr('y', innerH - 6)
   g.append('text').attr('class', 'med-label med-y-label').attr('x', 6)
 
-  // 象限位置描述（淡字，置於四角）
-  const pad = 8
-  const pos = {
-    tr: [innerW - pad, pad + 10, 'end'],
-    tl: [pad, pad + 10, 'start'],
-    br: [innerW - pad, innerH - pad - 18, 'end'],
-    bl: [pad, innerH - pad - 18, 'start'],
-  }
-  g.selectAll('text.quad')
-    .data(QUADS)
-    .join('text')
-    .attr('class', 'quad')
-    .attr('x', (d) => pos[d.key][0])
-    .attr('y', (d) => pos[d.key][1])
-    .attr('text-anchor', (d) => pos[d.key][2])
-    .text((d) => d.text)
+  // 象限名稱（置於四角、淺灰底標籤）：只描述位置，文字與縣市數在 draw() 更新
+  const quadG = g.selectAll('g.quad').data(QUADS).join('g').attr('class', 'quad')
+  quadG.append('rect').attr('class', 'quad-bg').attr('rx', 4)
+  quadG.append('text').attr('class', 'quad-text')
 
   xAxisG = g.append('g').attr('class', 'axis').attr('transform', `translate(0,${innerH})`)
   yAxisG = g.append('g').attr('class', 'axis')
@@ -326,6 +355,19 @@ function build() {
     .attr('y', innerH + 44)
     .attr('text-anchor', 'middle')
     .text('每十萬人犯罪率（件）')
+  // 方向提示：先看懂軸的方向，再看象限
+  g.append('text')
+    .attr('class', 'axis-hint')
+    .attr('x', innerW)
+    .attr('y', innerH + 44)
+    .attr('text-anchor', 'end')
+    .text('犯罪率越高 →')
+  g.append('text')
+    .attr('class', 'axis-hint')
+    .attr('x', 0)
+    .attr('y', -8)
+    .attr('text-anchor', 'start')
+    .text('↑ 破獲率越高')
   g.append('text')
     .attr('class', 'axis-title')
     .attr('transform', `translate(-48,${innerH / 2}) rotate(-90)`)
@@ -373,6 +415,7 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
       <li>破獲率＝破獲件數 ÷ 發生件數；破獲數包含往年積案，所以可能超過 100%，不能當成「當年案件被破獲的比例」。</li>
       <li v-if="isViolent">細線為犯罪率的 95% 信賴區間；暴力犯罪件數少，區間很寬的縣市，位置不宜過度解讀。</li>
       <li v-if="isViolent">連江縣 2025 年暴力犯罪 0 件，破獲率無法計算，未畫入本圖。</li>
+      <li v-if="onMedian > 0">四個角落的縣市數以全國計算；破獲率剛好等於中位數的 {{ onMedian }} 個縣市落在分隔線上，不計入四區。</li>
     </ul>
   </section>
 </template>
@@ -468,9 +511,18 @@ svg :deep(.axis path),
 svg :deep(.axis line) {
   stroke: var(--color-border);
 }
-svg :deep(.quad) {
-  fill: var(--slate-light);
-  opacity: 0.8;
+svg :deep(.quad-bg) {
+  fill: var(--paper-deep);
+  opacity: 0.92;
+}
+svg :deep(.quad-text) {
+  fill: var(--slate);
+  font-size: 13px;
+  font-weight: 600;
+}
+svg :deep(.axis-hint) {
+  fill: var(--color-muted);
+  font-size: 13px;
 }
 svg :deep(.med) {
   stroke: #9aa7ab;
