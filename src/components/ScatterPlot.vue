@@ -12,7 +12,7 @@ import { CARD_CHROME, useLayoutWidth } from '../composables/useLayoutWidth.js'
 import ChartDataTable from './ChartDataTable.vue'
 
 const { counties, meta } = useCrimeData()
-const { state, hover, togglePin } = useViewState()
+const { state, hover, togglePin, setBrushed } = useViewState()
 
 const svgRef = ref(null)
 const showTable = ref(false)
@@ -47,7 +47,7 @@ const fmt = d3.format(',.2f')
 // 破獲率剛好等於中位數（落在分隔線上）的縣市數：不計入四區
 const onMedian = ref(0)
 
-let g, x, y, r, xAxisG, yAxisG
+let g, x, y, r, xAxisG, yAxisG, brush, brushG
 const QUADS = [
   { key: 'tr', text: '高犯罪率・高破獲率' },
   { key: 'tl', text: '低犯罪率・高破獲率' },
@@ -375,8 +375,40 @@ function build() {
     .text('破獲率')
 
   g.append('g').attr('class', 'cis')
+  // 框選（brush）：放在圓點下層，點與懸停仍作用在圓點上；從空白處拖曳即可框選
+  brush = d3
+    .brush()
+    .extent([
+      [0, 0],
+      [innerW, innerH],
+    ])
+    .on('brush end', onBrush)
+  brushG = g.append('g').attr('class', 'brush').call(brush)
   g.append('g').attr('class', 'dots')
+  if (state.brushed) setBrushed(null) // 重建（例如視窗寬度改變）後框選框不在了，一併清除
   draw(false)
+}
+
+// 框選範圍內的縣市（依犯罪率由高到低）→ 共用狀態，A、B、C 同步標示
+function onBrush(event) {
+  if (!event.sourceEvent) return // 程式清除框選時不回寫狀態
+  const sel = event.selection
+  if (!sel) {
+    setBrushed(null)
+    return
+  }
+  const type = state.crimeType
+  const [[x0, y0], [x1, y1]] = sel
+  const ids = counties
+    .filter((c) => c[type].clearance !== null)
+    .filter((c) => {
+      const px = x(c[type].rate)
+      const py = y(c[type].clearance)
+      return px >= x0 && px <= x1 && py >= y0 && py <= y1
+    })
+    .sort((a, b) => b[type].rate - a[type].rate)
+    .map((c) => c.id)
+  setBrushed(ids)
 }
 
 onMounted(build)
@@ -385,7 +417,14 @@ watch(svgW, build)
 watch(() => state.crimeType, () => draw(true))
 // 篩選會改變標題點名的縣市，標籤要重新擺放
 watch(() => state.filter, () => draw(false))
-watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
+watch(() => [state.hovered, state.pinned, state.filter, state.brushed], () => updateEmphasis())
+// 框選被清除（Esc、清除按鈕、換案類、發現卡）時，移除圖上的框
+watch(
+  () => state.brushed,
+  (b) => {
+    if (!b && brushG && d3.brushSelection(brushG.node())) brushG.call(brush.move, null)
+  },
+)
 </script>
 
 <template>
@@ -415,6 +454,7 @@ watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
       <li>破獲率＝破獲件數 ÷ 發生件數；破獲數包含往年積案，所以可能超過 100%，不能當成「當年案件被破獲的比例」。</li>
       <li v-if="isViolent">細線為犯罪率的 95% 信賴區間；暴力犯罪件數少，區間很寬的縣市，位置不宜過度解讀。</li>
       <li v-if="isViolent">連江縣 2025 年暴力犯罪 0 件，破獲率無法計算，未畫入本圖。</li>
+      <li>在圖上空白處拖曳可框選多個縣市，圖 A、B 會同步標示；按 Esc 或在框外點一下取消。</li>
       <li v-if="onMedian > 0">四個角落的縣市數以全國計算；破獲率剛好等於中位數的 {{ onMedian }} 個縣市落在分隔線上，不計入四區。</li>
     </ul>
   </section>
@@ -510,6 +550,13 @@ svg :deep(.axis-title) {
 svg :deep(.axis path),
 svg :deep(.axis line) {
   stroke: var(--color-border);
+}
+/* 框選框：黃色只代表「選取」，與鎖定同一個意思 */
+svg :deep(.brush .selection) {
+  fill: var(--mark);
+  fill-opacity: 0.15;
+  stroke: var(--ink);
+  stroke-dasharray: 4 3;
 }
 svg :deep(.quad-bg) {
   fill: var(--paper-deep);

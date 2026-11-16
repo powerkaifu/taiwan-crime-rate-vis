@@ -250,7 +250,7 @@ watch(
 )
 watch(W, () => draw(false))
 watch(
-	() => [state.hovered, state.pinned, state.filter],
+	() => [state.hovered, state.pinned, state.filter, state.brushed],
 	() => updateEmphasis(),
 )
 </script>

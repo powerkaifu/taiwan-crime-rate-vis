@@ -172,7 +172,7 @@ onMounted(() => {
 })
 
 watch(() => state.crimeType, () => draw(true))
-watch(() => [state.hovered, state.pinned, state.filter], () => updateEmphasis())
+watch(() => [state.hovered, state.pinned, state.filter, state.brushed], () => updateEmphasis())
 </script>
 
 <template>

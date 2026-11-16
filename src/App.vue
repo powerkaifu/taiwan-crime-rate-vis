@@ -11,14 +11,18 @@ import { useCrimeData } from './composables/useCrimeData.js'
 import { useViewState } from './composables/useViewState.js'
 
 const { meta } = useCrimeData()
-const { clearPin } = useViewState()
+const { clearPin, clearBrush } = useViewState()
 
 // 取消鎖定：點空白處或按 Esc（規格書 §5.2）
 function onClick(e) {
   if (e.target.closest('g.row, g.dot, g.tile, button')) return
   clearPin()
 }
-const onKey = (e) => e.key === 'Escape' && clearPin()
+const onKey = (e) => {
+  if (e.key !== 'Escape') return
+  clearPin()
+  clearBrush()
+}
 onMounted(() => window.addEventListener('keydown', onKey))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </script>

@@ -7,7 +7,7 @@ import { useViewState } from '../composables/useViewState.js'
 import { countySummary } from '../utils/headlines.js'
 
 const { counties, meta } = useCrimeData()
-const { state, setCrimeType, setFilter } = useViewState()
+const { state, setCrimeType, setFilter, clearBrush } = useViewState()
 
 const groups = computed(() => [
   {
@@ -87,7 +87,13 @@ onBeforeUnmount(() => {
           <b>{{ summary[0] }}</b>
           <span v-for="(part, i) in summary.slice(1)" :key="i" class="part">{{ part }}</span>
         </span>
-        <span v-else class="hint">滑鼠移到縣市上看數字；點一下鎖定，這裡會顯示它的摘要；點空白處或按 Esc 取消。</span>
+        <span v-else-if="state.brushed" class="summary">
+          <span class="pin-tag">已框選</span>
+          <b>{{ state.brushed.length }} 縣市</b>
+          <span class="part">{{ state.brushed.slice(0, 8).join('、') }}{{ state.brushed.length > 8 ? ' 等' : '' }}</span>
+          <button type="button" class="clear-brush" @click.stop="clearBrush">清除框選</button>
+        </span>
+        <span v-else class="hint">滑鼠移到縣市上看數字；點一下鎖定，這裡會顯示它的摘要；在圖 C 拖曳可框選多個縣市；點空白處或按 Esc 取消。</span>
       </p>
       <p v-if="state.filter !== 'all'" class="status note">其他縣市變淡但保留；名次與中位數仍以全國 22 縣市計算。</p>
     </div>
@@ -226,6 +232,17 @@ onBeforeUnmount(() => {
 }
 .summary b {
   font-size: 16px;
+}
+.clear-brush {
+  margin-left: 8px;
+  font: inherit;
+  font-size: var(--font-min);
+  padding: 1px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-ink-soft);
+  cursor: pointer;
 }
 .pin-tag {
   font-size: var(--font-min);
