@@ -6,6 +6,8 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useCrimeData } from '../composables/useCrimeData.js'
 import { emphasis, useViewState } from '../composables/useViewState.js'
 import { fmtRate as fmtRateT } from '../utils/format.js'
+import { rateColorScale } from '../utils/colors.js'
+import RateLegend from './RateLegend.vue'
 import { headlineTile } from '../utils/headlines.js'
 import { dur } from '../utils/motion.js'
 import ChartDataTable from './ChartDataTable.vue'
@@ -32,11 +34,8 @@ const tiles = TILE_LAYOUT.map((t) => ({ ...t, county: byId.get(t.id) }))
 const cellX = (col) => M.left + col * (CELL + GAP) + (col > 0 ? ISLAND_GAP : 0)
 const cellY = (row) => M.top + row * (CELL + GAP)
 
-// 第 13 步：率青單一色相明度色階（與圖 A 犯罪率橫條同色，代表同一個量）；禁用彩虹色
-const RAMP = ['#E3EEEF', '#0E6F7A']
-const color = d3.scaleSequential(d3.interpolateLab(...RAMP))
-const STEPS = 5
-const legend = ref({ min: '', max: '', stops: [] })
+// 率青單一色相明度色階，與圖 A 共用 5 級分級（utils/colors.js）；禁用彩虹色
+let color = rateColorScale([0, 1])
 const fmtRate = (v) => fmtRateT(v, state.crimeType)
 
 let g
@@ -44,13 +43,7 @@ let g
 function draw(animate) {
   const type = state.crimeType
   const rates = counties.map((c) => c[type].rate)
-  color.domain(d3.extent(rates))
-  legend.value = {
-    min: fmtRate(d3.min(rates)),
-    max: fmtRate(d3.max(rates)),
-    // 分段圖例：5 段，每段取該區間中點的顏色
-    stops: d3.range(STEPS).map((i) => d3.interpolateLab(...RAMP)((i + 0.5) / STEPS)),
-  }
+  color = rateColorScale(rates)
   const t = d3.transition().duration(animate ? dur(DURATION) : 0).ease(d3.easeCubicOut)
 
   const cells = g.selectAll('g.tile')
@@ -184,14 +177,11 @@ watch(() => [state.hovered, state.pinned, state.filter, state.brushed], () => up
       </div>
       <button class="table-btn" :aria-pressed="showTable" @click="showTable = !showTable">{{ showTable ? '顯示圖表' : '資料表' }}</button>
     </div>
-    <p class="caption">每個縣市一格、大小相同；顏色越深，每十萬人犯罪率越高。左欄為離島。</p>
+    <p class="caption">每個縣市一格、大小相同；顏色分 5 級，越深每十萬人犯罪率越高（與圖 A 同色）。左欄為離島。</p>
     <ChartDataTable v-if="showTable" kind="B" :style="{ width: `${W}px` }" />
     <svg v-show="!showTable" ref="svgRef" :viewBox="`0 0 ${W} ${H}`" :width="W" :height="H" role="img" :aria-label="`${typeLabel}各縣市犯罪率等積方塊地圖`" />
     <div v-show="!showTable" class="legend" aria-hidden="true">
-      <span>{{ legend.min }}</span>
-      <span class="steps"><span v-for="c in legend.stops" :key="c" class="step" :style="{ background: c }" /></span>
-      <span>{{ legend.max }}</span>
-      <span class="unit">（每十萬人）</span>
+      <RateLegend :type="state.crimeType" />
     </div>
     <p v-if="isViolent" class="note">白色細斜線：件數少於 30，犯罪率容易因少數案件大幅變動；灰色斜線：本年 0 件。</p>
   </section>
@@ -231,25 +221,6 @@ h2 {
   color: var(--color-ink-soft);
   margin-top: 6px;
 }
-.steps {
-  display: inline-flex;
-  gap: 2px;
-}
-.step {
-  display: inline-block;
-  width: 30px;
-  height: 14px;
-}
-.step:first-child {
-  border-radius: 3px 0 0 3px;
-}
-.step:last-child {
-  border-radius: 0 3px 3px 0;
-}
-.unit {
-  color: var(--color-muted);
-}
-
 .table-btn {
   flex: none;
   white-space: nowrap;

@@ -9,6 +9,8 @@ import { useCrimeData } from '../composables/useCrimeData.js'
 import { CARD_CHROME, GRID_GAP, useLayoutWidth } from '../composables/useLayoutWidth.js'
 import { emphasis, useViewState } from '../composables/useViewState.js'
 import { fmtCount, fmtRate } from '../utils/format.js'
+import { COUNT_COLOR, rateColorScale } from '../utils/colors.js'
+import RateLegend from './RateLegend.vue'
 import { headlineA } from '../utils/headlines.js'
 import { dur } from '../utils/motion.js'
 import { TILE_CARD_W } from '../utils/tileLayout.js'
@@ -47,6 +49,8 @@ const fmtValue = (v) => (state.barMode === 'count' ? `${fmtCount(v)} 件` : fmtR
 const isMinor = (r, type) => Math.abs(r.rankDelta) <= 2 || (type === '暴力' && r.smallN)
 
 let g, axisG, headG, x
+// 依目前案類的 22 縣市犯罪率建立 5 級色階
+const rateColor = (v) => rateColorScale(counties.map((c) => c[state.crimeType].rate))(v)
 
 function draw(animate) {
 	const type = state.crimeType
@@ -154,6 +158,8 @@ function draw(animate) {
 		.attr('height', y.bandwidth())
 		.transition(t)
 		.attr('width', (d) => x(value(d)))
+		// 犯罪率模式依 5 級區間上色（與圖 B 同一套色階）；件數模式維持灰色
+		.attr('fill', (d) => (state.barMode === 'rate' ? rateColor(d[type].rate) : COUNT_COLOR))
 	rows
 		.select('line.ci')
 		.attr('y1', mid)
@@ -282,9 +288,10 @@ watch(
 			<span class="only">只影響這張圖</span>
 		</div>
 		<p v-show="!showTable" class="key">
-			<span class="swatch" :class="state.barMode === 'count' ? 'sw-count' : 'sw-rate'" />
+			<RateLegend v-if="state.barMode === 'rate'" :type="state.crimeType" class="ramp" />
+			<span v-else class="swatch sw-count" />
 			<template v-if="state.barMode === 'rate'"
-				>青色＝每十萬人犯罪率。右側「<s>17</s> → 1」：件數排第 17，換算人口後排第 1；▲
+				><br />青色深淺＝每十萬人犯罪率分 5 級，每級約 4-5 個縣市（與圖 B 同色）。右側「<s>17</s> → 1」：件數排第 17，換算人口後排第 1；▲
 				名次往前（犯罪率排名比件數排名高），▼ 往後。</template
 			>
 			<template v-else>灰色＝發生件數（還沒依人口換算）。括號內是換算成每十萬人犯罪率後的名次。</template>
@@ -447,13 +454,6 @@ svg :deep(.row:focus-visible .band) {
 	stroke: var(--ink);
 	stroke-width: 1.5;
 }
-svg :deep(.bar) {
-	fill: var(--rate);
-	transition: fill 0.4s;
-}
-svg :deep(.mode-count .bar) {
-	fill: var(--count);
-}
 
 svg :deep(.ci) {
 	stroke: var(--ink);
@@ -516,8 +516,8 @@ svg :deep(.rank .small) {
 	border-radius: 2px;
 	vertical-align: 0;
 }
-.sw-rate {
-	background: var(--rate);
+.ramp {
+	margin-right: 8px;
 }
 .sw-count {
 	background: var(--count);

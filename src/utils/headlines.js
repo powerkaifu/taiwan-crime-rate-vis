@@ -2,6 +2,7 @@
 // 第 13 步：結論跟著篩選走——只在目前篩選的縣市中找，名次仍是全國 22 縣市的名次。
 import { passesFilter } from '../composables/useViewState.js'
 import { fmtCount, fmtPct, fmtRate } from './format.js'
+import { rateColorScale } from './colors.js'
 
 const byRate = (type) => (a, b) => b[type].rate - a[type].rate
 const byCount = (type) => (a, b) => b[type].count - a[type].count
@@ -39,9 +40,11 @@ export function headlineScatter(counties, meta, type, filter = 'all') {
   return `${scope}犯罪率高於中位數、破獲率低於中位數：${names} ${hit.length} 縣市`
 }
 
-/** 圖 B（等積方塊地圖）：顏色最深的 3 個縣市 */
+/** 圖 B（等積方塊地圖）：目前篩選中顏色最深那一級的縣市（分級以全國 22 縣市計算） */
 export function headlineTile(counties, type, filter = 'all') {
-  const top = [...subset(counties, filter)].sort(byRate(type)).slice(0, 3)
+  const level = rateColorScale(counties.map((c) => c[type].rate))
+  const list = [...subset(counties, filter)].sort(byRate(type))
+  const top = list.filter((c) => level(c[type].rate) === level(list[0][type].rate))
   return `${SCOPE[filter]}顏色最深：${top.map((c) => c.id).join('、')}`
 }
 
